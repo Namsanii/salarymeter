@@ -50,6 +50,15 @@ function fmtWon(n: number): string {
   return Math.max(0, Math.round(n)).toLocaleString("ko-KR");
 }
 
+const RATE_INTERVALS: { label: string; seconds: number }[] = [
+  { label: "1초", seconds: 1 },
+  { label: "1분", seconds: 60 },
+  { label: "15분", seconds: 900 },
+  { label: "30분", seconds: 1800 },
+  { label: "45분", seconds: 2700 },
+  { label: "1시간", seconds: 3600 },
+];
+
 export default function SalaryMeter() {
   const currentYear = new Date().getFullYear();
 
@@ -97,12 +106,29 @@ export default function SalaryMeter() {
 
   if (view === "result") {
     return (
-      <div className="w-full max-w-[420px] mx-auto min-h-screen flex flex-col items-center justify-center px-4">
+      <div className="w-full max-w-[420px] mx-auto min-h-screen flex flex-col items-center justify-center px-4 py-10">
         <div className="text-[13px] text-neutral-400 mb-3 tracking-wide">지금까지</div>
         <div className="font-mono font-bold text-[clamp(32px,9vw,52px)] text-neutral-900 tabular-nums mb-2 text-center">
           {fmtWon(earned)}원
         </div>
-        <div className="text-[15px] text-neutral-500 mb-10">벌었습니다</div>
+        <div className="text-[15px] text-neutral-500 mb-8">벌었습니다</div>
+
+        <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-8">
+          {RATE_INTERVALS.map((r, i) => (
+            <div
+              key={r.label}
+              className={`flex items-center justify-between px-4 py-3 text-[14px] ${
+                i !== RATE_INTERVALS.length - 1 ? "border-b border-neutral-200" : ""
+              }`}
+            >
+              <span className="text-neutral-500">{r.label}당</span>
+              <span className="font-mono font-medium text-neutral-900 tabular-nums">
+                {fmtWon(perSecond * r.seconds)}원
+              </span>
+            </div>
+          ))}
+        </div>
+
         <button
           onClick={handleBack}
           className="text-[13px] text-neutral-400 underline underline-offset-4 hover:text-neutral-600"
