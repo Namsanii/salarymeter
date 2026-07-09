@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #14120f;
+  --color-housing: #1f1c17;
+  --color-housing2: #262119;
+  --color-bezel: #100e0b;
+  --color-amber: #ffb020;
+  --color-amberdim: #4a3714;
+  --color-copper: #c97c3f;
+  --color-muted: #a89a82;
+  --color-faint: #6b6152;
+  --color-metergreen: #6fae7d;
+  --color-gray2: #55503f;
+  --color-cream: #f5efe4;
+  --font-mono: "Space Mono", monospace;
+  --font-sans: "Noto Sans KR", sans-serif;
+  --animate-pop: pop 0.28s ease;
+  --animate-pulseled: pulseLed 2s infinite;
+}
+
+@keyframes pop {
+  0% { transform: translateY(-40%); opacity: 0.2; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulseLed {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+html, body {
+  background: radial-gradient(ellipse at 50% -10%, #24201a 0%, #14120f 55%);
+  color: #f5efe4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
