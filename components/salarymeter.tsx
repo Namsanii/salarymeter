@@ -163,7 +163,7 @@ const EMOJI_MAP: [string, string][] = [
   ["빅맥", "🍔"],
   ["유튜브", "▶️"],
   ["멜론", "🎵"],
-  ["아이클라우드", "☁️"],
+  ["iCloud", "☁️"],
 ];
 
 function getEmoji(name: string): string {
@@ -176,20 +176,19 @@ const SUGGESTED_GROUPS: { category: string; items: { name: string; price: number
     category: "식음료",
     items: [
       { name: "아메리카노", price: 4500 },
-      { name: "빅맥 세트", price: 7900 },
-      { name: "치킨 한 마리", price: 20000 },
-      { name: "짜장면 한 그릇", price: 7000 },
-      { name: "편의점 삼각김밥", price: 1700 },
-      { name: "라면 한 그릇", price: 4000 },
+      { name: "빅맥", price: 7900 },
+      { name: "치킨", price: 20000 },
+      { name: "짜장면", price: 7000 },
+      { name: "삼각김밥", price: 1700 },
+      { name: "라면", price: 4000 },
     ],
   },
   {
     category: "구독료",
     items: [
-      { name: "넷플릭스 한 달 구독료", price: 13500 },
-      { name: "유튜브 프리미엄", price: 14900 },
-      { name: "멜론 스트리밍", price: 10900 },
-      { name: "아이클라우드 50GB", price: 1100 },
+      { name: "넷플릭스", price: 13500 },
+      { name: "유튜브", price: 14900 },
+      { name: "iCloud", price: 1100 },
     ],
   },
   {
@@ -203,8 +202,8 @@ const SUGGESTED_GROUPS: { category: string; items: { name: string; price: number
   {
     category: "기타",
     items: [
-      { name: "영화표 1장", price: 15000 },
-      { name: "로또 1장", price: 1000 },
+      { name: "영화표", price: 15000 },
+      { name: "로또", price: 1000 },
     ],
   },
 ];
