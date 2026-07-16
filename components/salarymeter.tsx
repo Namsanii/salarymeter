@@ -151,12 +151,25 @@ const EMOJI_MAP: [string, string][] = [
   ["향수", "🌸"],
   ["자동차", "🚗"],
   ["차", "☕"],
+  ["김밥", "🍙"],
+  ["짜장면", "🍜"],
+  ["영화", "🎬"],
+  ["지하철", "🚇"],
 ];
 
 function getEmoji(name: string): string {
   const found = EMOJI_MAP.find(([keyword]) => name.includes(keyword));
   return found ? found[1] : "🎁";
 }
+
+const SUGGESTED_ITEMS: { name: string; price: number }[] = [
+  { name: "아메리카노", price: 4500 },
+  { name: "김밥 한 줄", price: 3500 },
+  { name: "짜장면 한 그릇", price: 7000 },
+  { name: "치킨 한 마리", price: 20000 },
+  { name: "지하철 기본요금", price: 1550 },
+  { name: "영화표 1장", price: 15000 },
+];
 
 const CONFETTI_EMOJIS = ["🎉", "✨", "🎊", "⭐️", "💛", "💫"];
 
@@ -306,6 +319,15 @@ export default function SalaryMeter() {
   const handleSelectResult = (r: { title: string; price: number; image: string }) => {
     setNewItemPriceDigits(String(r.price));
     setSearchResults([]);
+  };
+
+  const handleQuickAdd = (name: string, price: number) => {
+    setWishlist((prev) => {
+      if (prev.some((w) => w.name === name)) return prev;
+      return [...prev, { id: crypto.randomUUID(), name, priceWon: price }].sort(
+        (a, b) => a.priceWon - b.priceWon
+      );
+    });
   };
 
   const handleAddItem = () => {
@@ -663,6 +685,26 @@ export default function SalaryMeter() {
           <label className="block text-[13px] text-neutral-500 mb-2 mt-4">
             위시리스트 <span className="text-neutral-400">(선택, 금액 도달하면 알려드려요)</span>
           </label>
+
+          <div className="mb-3">
+            <div className="text-[11.5px] text-neutral-400 mb-1.5">
+              사람들이 많이 등록해요 · 눌러서 바로 추가 (참고 가격, 나중에 수정 가능)
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {SUGGESTED_ITEMS.map((s) => (
+                <button
+                  key={s.name}
+                  type="button"
+                  onClick={() => handleQuickAdd(s.name, s.price)}
+                  className="text-[12px] text-neutral-600 border border-neutral-200 rounded-full px-3 py-1.5 hover:bg-neutral-50 flex items-center gap-1"
+                >
+                  <span>{getEmoji(s.name)}</span>
+                  <span>{s.name}</span>
+                  <span className="text-neutral-400">· {fmtWon(s.price)}원</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
           {wishlist.length > 0 && (
             <div className="mb-3 space-y-1.5">
