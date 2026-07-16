@@ -162,9 +162,12 @@ export default function SalaryMeter() {
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [newItemName, setNewItemName] = useState("");
   const [newItemPriceDigits, setNewItemPriceDigits] = useState("");
-const [searchResults, setSearchResults] = useState<{ title: string; price: number; mallName: string; image: string }[]>([]);
+  const [searchResults, setSearchResults] = useState
+    { title: string; price: number; mallName: string; image: string }[]
+  >([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [editingWishlist, setEditingWishlist] = useState(false);
   const [celebration, setCelebration] = useState<CelebrationInfo | null>(null);
   const [confetti, setConfetti] = useState<ConfettiParticle[]>([]);
   const celebratedCountRef = useRef<Map<string, number>>(new Map());
@@ -246,8 +249,8 @@ const [searchResults, setSearchResults] = useState<{ title: string; price: numbe
     }
   };
 
-const handleSelectResult = (r: { title: string; price: number; image: string }) => {
-      setNewItemPriceDigits(String(r.price));
+  const handleSelectResult = (r: { title: string; price: number; image: string }) => {
+    setNewItemPriceDigits(String(r.price));
     setSearchResults([]);
   };
 
@@ -267,11 +270,25 @@ const handleSelectResult = (r: { title: string; price: number; image: string }) 
     setWishlist((prev) => prev.filter((w) => w.id !== id));
   };
 
+  const handleUpdateItemName = (id: string, name: string) => {
+    setWishlist((prev) => prev.map((w) => (w.id === id ? { ...w, name } : w)));
+  };
+
+  const handleUpdateItemPrice = (id: string, rawValue: string) => {
+    const digits = rawValue.replace(/[^0-9]/g, "");
+    const price = Number(digits || "0");
+    setWishlist((prev) => prev.map((w) => (w.id === id ? { ...w, priceWon: price } : w)));
+    if (price > 0) {
+      celebratedCountRef.current.set(id, Math.floor(earned / price));
+    }
+  };
+
   const handleConfirm = () => {
     if (!salaryManwonDigits || salary <= 0) return;
     celebratedCountRef.current = new Map();
     setCelebration(null);
     setConfetti([]);
+    setEditingWishlist(false);
     setStartTime(Date.now());
     setNow(Date.now());
     setView("result");
@@ -283,6 +300,7 @@ const handleSelectResult = (r: { title: string; price: number; image: string }) 
     celebratedCountRef.current = new Map();
     setCelebration(null);
     setConfetti([]);
+    setEditingWishlist(false);
   };
 
   if (view === "result") {
@@ -343,8 +361,8 @@ const handleSelectResult = (r: { title: string; price: number; image: string }) 
           ))}
         </div>
 
-        {wishlist.length > 0 && (
-          <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-8">
+        {wishlist.length > 0 && !editingWishlist && (
+          <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-4">
             {wishlist.map((w, i) => {
               const count = Math.floor(earned / w.priceWon);
               const remainingWon = w.priceWon * (count + 1) - earned;
@@ -377,6 +395,116 @@ const handleSelectResult = (r: { title: string; price: number; image: string }) 
             })}
           </div>
         )}
+
+        {editingWishlist && (
+          <div className="w-full border border-neutral-200 rounded-xl p-3 mb-4">
+            {wishlist.map((w) => (
+              <div
+                key={w.id}
+                className="flex items-center gap-2 py-2 border-b last:border-b-0 border-neutral-100"
+              >
+                <input
+                  type="text"
+                  value={w.name}
+                  onChange={(e) => handleUpdateItemName(w.id, e.target.value)}
+                  className="flex-1 min-w-0 border border-neutral-300 rounded-md px-2 py-1.5 text-[13px] outline-none focus:border-neutral-900"
+                />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={formatWithCommas(String(w.priceWon))}
+                  onChange={(e) => handleUpdateItemPrice(w.id, e.target.value)}
+                  className="w-[90px] border border-neutral-300 rounded-md px-2 py-1.5 text-[13px] text-right font-mono outline-none focus:border-neutral-900"
+                />
+                <button
+                  onClick={() => handleRemoveItem(w.id)}
+                  className="text-neutral-400 hover:text-neutral-700 text-[14px]"
+                  aria-label="삭제"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+
+            <div className="flex gap-2 mt-3 mb-2">
+              <input
+                type="text"
+                value={newItemName}
+                onChange={(e) => setNewItemName(e.target.value)}
+                placeholder="예: 커피"
+                className="flex-1 min-w-0 border border-neutral-300 text-neutral-900 text-[13px] px-2 py-1.5 rounded-md outline-none focus:border-neutral-900"
+              />
+              <button
+                onClick={handleSearch}
+                disabled={!newItemName.trim() || searching}
+                className="shrink-0 text-[12.5px] font-medium text-neutral-900 border border-neutral-300 rounded-md px-2.5 py-1.5 hover:bg-neutral-50 disabled:text-neutral-300 disabled:cursor-not-allowed"
+              >
+                {searching ? "검색 중..." : "가격 검색"}
+              </button>
+            </div>
+
+            {searchError && (
+              <div className="text-[12px] text-red-500 mb-2">{searchError}</div>
+            )}
+
+            {searchResults.length > 0 && (
+              <div className="mb-2 border border-neutral-200 rounded-md overflow-hidden">
+                {searchResults.map((r, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => handleSelectResult(r)}
+                    className={`w-full text-left px-2.5 py-1.5 text-[12px] hover:bg-neutral-50 flex items-center gap-2 ${
+                      i !== searchResults.length - 1 ? "border-b border-neutral-200" : ""
+                    }`}
+                  >
+                    {r.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={r.image}
+                        alt=""
+                        className="w-8 h-8 rounded object-cover shrink-0 bg-neutral-100"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded bg-neutral-100 shrink-0" />
+                    )}
+                    <span className="flex-1 min-w-0 truncate text-neutral-700">
+                      {r.title}
+                      <span className="text-neutral-400"> · {r.mallName}</span>
+                    </span>
+                    <span className="font-mono text-neutral-900 shrink-0">
+                      {fmtWon(r.price)}원
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={formatWithCommas(newItemPriceDigits)}
+                onChange={handleItemPriceChange}
+                placeholder="가격 직접 입력 (원)"
+                className="flex-1 min-w-0 border border-neutral-300 text-neutral-900 text-[13px] px-2 py-1.5 rounded-md outline-none focus:border-neutral-900 text-right font-mono"
+              />
+              <button
+                onClick={handleAddItem}
+                className="shrink-0 text-[12.5px] font-medium text-neutral-900 border border-neutral-300 rounded-md px-2.5 py-1.5 hover:bg-neutral-50"
+              >
+                추가
+              </button>
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={() => setEditingWishlist((v) => !v)}
+          className="text-[13px] text-neutral-400 underline underline-offset-4 hover:text-neutral-600 mb-3"
+        >
+          {editingWishlist ? "완료" : "위시리스트 수정"}
+        </button>
 
         <button
           onClick={handleBack}
@@ -486,7 +614,7 @@ const handleSelectResult = (r: { title: string; price: number; image: string }) 
 
           {searchResults.length > 0 && (
             <div className="mb-3 border border-neutral-200 rounded-lg overflow-hidden">
-             {searchResults.map((r, i) => (
+              {searchResults.map((r, i) => (
                 <button
                   key={i}
                   type="button"
