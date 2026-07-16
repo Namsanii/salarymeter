@@ -173,7 +173,7 @@ function getEmoji(name: string): string {
 
 const SUGGESTED_GROUPS: { category: string; items: { name: string; price: number }[] }[] = [
   {
-    category: "F&B",
+    category: "식음료",
     items: [
       { name: "아메리카노", price: 4500 },
       { name: "빅맥", price: 7900 },
@@ -184,15 +184,15 @@ const SUGGESTED_GROUPS: { category: string; items: { name: string; price: number
     ],
   },
   {
-    category: "Subscription",
+    category: "구독료",
     items: [
       { name: "넷플릭스", price: 13500 },
       { name: "유튜브", price: 14900 },
-      { name: "iCloud", price: 1100 },
+      { name: "iCloud 50GB", price: 1100 },
     ],
   },
   {
-    category: "Transportation",
+    category: "교통요금",
     items: [
       { name: "지하철", price: 1550 },
       { name: "버스", price: 1500 },
@@ -200,13 +200,14 @@ const SUGGESTED_GROUPS: { category: string; items: { name: string; price: number
     ],
   },
   {
-    category: "etc",
+    category: "기타",
     items: [
       { name: "영화표", price: 15000 },
       { name: "로또", price: 1000 },
     ],
   },
 ];
+
 const CONFETTI_EMOJIS = ["🎉", "✨", "🎊", "⭐️", "💛", "💫"];
 
 interface WishItem {
@@ -722,35 +723,6 @@ export default function SalaryMeter() {
             위시리스트 <span className="text-neutral-400">(선택, 금액 도달하면 알려드려요)</span>
           </label>
 
-          <div className="mb-4">
-            <div className="text-[11.5px] text-neutral-400 mb-2">
-              사람들이 많이 등록해요 · 눌러서 바로 추가 (참고 가격, 나중에 수정 가능)
-            </div>
-            <div className="space-y-2.5">
-              {SUGGESTED_GROUPS.map((g) => (
-                <div key={g.category}>
-                  <div className="text-[11px] font-semibold text-neutral-500 mb-1">
-                    {g.category}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {g.items.map((s) => (
-                      <button
-                        key={s.name}
-                        type="button"
-                        onClick={() => handleQuickAdd(s.name, s.price)}
-                        className="text-[12px] text-neutral-600 border border-neutral-200 rounded-full px-3 py-1.5 hover:bg-neutral-50 flex items-center gap-1"
-                      >
-                        <span>{getEmoji(s.name)}</span>
-                        <span>{s.name}</span>
-                        <span className="text-neutral-400">· {fmtWon(s.price)}원</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {wishlist.length > 0 && (
             <div className="mb-3 space-y-1.5">
               {wishlist.map((w) => (
@@ -831,7 +803,7 @@ export default function SalaryMeter() {
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 mb-4">
             <input
               type="text"
               inputMode="numeric"
@@ -846,6 +818,35 @@ export default function SalaryMeter() {
             >
               추가
             </button>
+          </div>
+
+          <div>
+            <div className="text-[11.5px] text-neutral-400 mb-2">
+              사람들이 많이 등록해요 · 눌러서 바로 추가 (참고 가격, 나중에 수정 가능)
+            </div>
+            <div className="space-y-2.5">
+              {SUGGESTED_GROUPS.map((g) => (
+                <div key={g.category}>
+                  <div className="text-[11px] font-semibold text-neutral-500 mb-1">
+                    {g.category}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {g.items.map((s) => (
+                      <button
+                        key={s.name}
+                        type="button"
+                        onClick={() => handleQuickAdd(s.name, s.price)}
+                        className="text-[12px] text-neutral-600 border border-neutral-200 rounded-full px-3 py-1.5 hover:bg-neutral-50 flex items-center gap-1"
+                      >
+                        <span>{getEmoji(s.name)}</span>
+                        <span>{s.name}</span>
+                        <span className="text-neutral-400">· {fmtWon(s.price)}원</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
