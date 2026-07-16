@@ -65,6 +65,55 @@ function formatDuration(seconds: number): string {
   return remH > 0 ? `${days}일 ${remH}시간` : `${days}일`;
 }
 
+function diffHours(start: string, end: string): number {
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  let diffMin = eh * 60 + em - (sh * 60 + sm);
+  if (diffMin <= 0) diffMin = 8 * 60;
+  return diffMin / 60;
+}
+
+function isWithinWorkWindow(
+  now: Date,
+  start: string,
+  end: string,
+  weekdaysOnly: boolean
+): boolean {
+  if (weekdaysOnly) {
+    const day = now.getDay();
+    if (day === 0 || day === 6) return false;
+  }
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  const startD = new Date(now);
+  startD.setHours(sh, sm, 0, 0);
+  const endD = new Date(now);
+  endD.setHours(eh, em, 0, 0);
+  if (endD <= startD) return false;
+  return now >= startD && now < endD;
+}
+
+function getWorkStatus(
+  now: Date,
+  start: string,
+  end: string,
+  weekdaysOnly: boolean
+): "working" | "before" | "after" | "weekend" {
+  if (weekdaysOnly) {
+    const day = now.getDay();
+    if (day === 0 || day === 6) return "weekend";
+  }
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  const startD = new Date(now);
+  startD.setHours(sh, sm, 0, 0);
+  const endD = new Date(now);
+  endD.setHours(eh, em, 0, 0);
+  if (now < startD) return "before";
+  if (now >= endD) return "after";
+  return "working";
+}
+
 const RATE_INTERVALS: { label: string; seconds: number }[] = [
   { label: "1초", seconds: 1 },
   { label: "1분", seconds: 60 },
@@ -154,11 +203,14 @@ export default function SalaryMeter() {
 
   const [salaryManwonDigits, setSalaryManwonDigits] = useState("5000");
   const [workdays, setWorkdays] = useState(() => String(getDefaultWorkdays(currentYear)));
-  const [hours, setHours] = useState("8");
+  const [workStart, setWorkStart] = useState("09:00");
+  const [workEnd, setWorkEnd] = useState("18:00");
+  const [weekdaysOnly, setWeekdaysOnly] = useState(true);
   const [view, setView] = useState<"form" | "result">("form");
   const [startTime, setStartTime] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
+  const [earnedSec, setEarnedSec] = useState(0);
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [newItemName, setNewItemName] = useState("");
   const [newItemPriceDigits, setNewItemPriceDigits] = useState("");
@@ -172,22 +224,29 @@ export default function SalaryMeter() {
 
   useEffect(() => {
     if (view !== "result") return;
-    const id = setInterval(() => setNow(Date.now()), 1000);
+    const id = setInterval(() => {
+      const current = new Date();
+      setNow(current.getTime());
+      if (isWithinWorkWindow(current, workStart, workEnd, weekdaysOnly)) {
+        setEarnedSec((s) => s + 1);
+      }
+    }, 1000);
     return () => clearInterval(id);
-  }, [view]);
+  }, [view, workStart, workEnd, weekdaysOnly]);
 
   const salaryManwon = Number(salaryManwonDigits || "0");
   const salary = salaryManwon * 10000;
   const workdaysNum = Math.max(1, Number(workdays || "0"));
-  const hoursNum = Math.max(0.1, Number(hours || "0"));
+  const hoursNum = Math.max(0.1, diffHours(workStart, workEnd));
 
   const perSecond = salary / (workdaysNum * hoursNum * 3600);
 
-  const earned = useMemo(() => {
-    if (!startTime) return 0;
-    const elapsedSec = (now - startTime) / 1000;
-    return Math.max(0, elapsedSec) * perSecond;
-  }, [now, startTime, perSecond]);
+  const earned = earnedSec * perSecond;
+
+  const workStatus = useMemo(
+    () => getWorkStatus(new Date(now), workStart, workEnd, weekdaysOnly),
+    [now, workStart, workEnd, weekdaysOnly]
+  );
 
   useEffect(() => {
     if (view !== "result") return;
@@ -287,6 +346,7 @@ export default function SalaryMeter() {
     setCelebration(null);
     setConfetti([]);
     setEditingWishlist(false);
+    setEarnedSec(0);
     setStartTime(Date.now());
     setNow(Date.now());
     setView("result");
@@ -295,6 +355,7 @@ export default function SalaryMeter() {
   const handleBack = () => {
     setView("form");
     setStartTime(null);
+    setEarnedSec(0);
     celebratedCountRef.current = new Map();
     setCelebration(null);
     setConfetti([]);
@@ -341,7 +402,13 @@ export default function SalaryMeter() {
         <div className="font-mono font-bold text-[clamp(32px,9vw,52px)] text-neutral-900 tabular-nums mb-2 text-center">
           {fmtWon(earned)}원
         </div>
-        <div className="text-[15px] text-neutral-500 mb-8">벌었습니다</div>
+        <div className="text-[15px] text-neutral-500 mb-1">벌었습니다</div>
+        <div className="text-[12.5px] text-neutral-400 mb-8">
+          {workStatus === "working" && "근무 중 · 실시간으로 올라가고 있어요"}
+          {workStatus === "before" && `${workStart}부터 카운트가 시작돼요`}
+          {workStatus === "after" && "오늘 근무 종료 · 내일 다시 올라가요"}
+          {workStatus === "weekend" && "주말 · 카운트가 멈춰있어요"}
+        </div>
 
         <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-6">
           {RATE_INTERVALS.map((r, i) => (
@@ -549,13 +616,33 @@ export default function SalaryMeter() {
         </div>
 
         <div>
-          <label className="block text-[13px] text-neutral-500 mb-1.5">하루 근무시간</label>
-          <input
-            type="number"
-            value={hours}
-            onChange={(e) => setHours(e.target.value)}
-            className="w-full border border-neutral-300 text-neutral-900 text-[16px] px-3 py-2.5 rounded-lg outline-none focus:border-neutral-900 text-right font-mono"
-          />
+          <label className="block text-[13px] text-neutral-500 mb-1.5">근무 시간</label>
+          <div className="grid grid-cols-2 gap-2.5">
+            <input
+              type="time"
+              value={workStart}
+              onChange={(e) => setWorkStart(e.target.value)}
+              className="w-full border border-neutral-300 text-neutral-900 text-[15px] px-3 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
+            />
+            <input
+              type="time"
+              value={workEnd}
+              onChange={(e) => setWorkEnd(e.target.value)}
+              className="w-full border border-neutral-300 text-neutral-900 text-[15px] px-3 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
+            />
+          </div>
+          <div className="flex items-center gap-2 mt-2.5">
+            <input
+              type="checkbox"
+              id="weekdaysOnly"
+              checked={weekdaysOnly}
+              onChange={(e) => setWeekdaysOnly(e.target.checked)}
+              className="w-[15px] h-[15px] accent-neutral-900"
+            />
+            <label htmlFor="weekdaysOnly" className="text-[12.5px] text-neutral-500">
+              주말은 카운트 멈추기
+            </label>
+          </div>
         </div>
 
         <div className="pt-2 border-t border-neutral-200">
