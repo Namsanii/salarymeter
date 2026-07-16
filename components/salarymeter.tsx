@@ -173,7 +173,7 @@ function getEmoji(name: string): string {
 
 const SUGGESTED_GROUPS: { category: string; items: { name: string; price: number }[] }[] = [
   {
-    category: "식음료",
+    category: "F&B",
     items: [
       { name: "아메리카노", price: 4500 },
       { name: "빅맥", price: 7900 },
@@ -184,7 +184,7 @@ const SUGGESTED_GROUPS: { category: string; items: { name: string; price: number
     ],
   },
   {
-    category: "구독료",
+    category: "Subscription",
     items: [
       { name: "넷플릭스", price: 13500 },
       { name: "유튜브", price: 14900 },
@@ -192,15 +192,15 @@ const SUGGESTED_GROUPS: { category: string; items: { name: string; price: number
     ],
   },
   {
-    category: "교통요금",
+    category: "Transportation",
     items: [
-      { name: "지하철 기본요금", price: 1550 },
-      { name: "버스 기본요금", price: 1500 },
-      { name: "택시 기본요금", price: 4800 },
+      { name: "지하철", price: 1550 },
+      { name: "버스", price: 1500 },
+      { name: "택시", price: 4800 },
     ],
   },
   {
-    category: "기타",
+    category: "etc",
     items: [
       { name: "영화표", price: 15000 },
       { name: "로또", price: 1000 },
