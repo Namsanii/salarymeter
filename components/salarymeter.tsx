@@ -690,18 +690,18 @@ export default function SalaryMeter() {
 
         <div>
           <label className="block text-[13px] text-neutral-500 mb-1.5">근무 시간</label>
-          <div className="grid grid-cols-2 gap-2.5">
+          <<div className="grid grid-cols-2 gap-3">
             <input
               type="time"
               value={workStart}
               onChange={(e) => setWorkStart(e.target.value)}
-              className="w-full border border-neutral-300 text-neutral-900 text-[15px] px-3 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
+              className="w-full border border-neutral-300 text-neutral-900 text-[14px] px-2 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
             />
             <input
               type="time"
               value={workEnd}
               onChange={(e) => setWorkEnd(e.target.value)}
-              className="w-full border border-neutral-300 text-neutral-900 text-[15px] px-3 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
+              className="w-full border border-neutral-300 text-neutral-900 text-[14px] px-2 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
             />
           </div>
           <div className="flex items-center gap-2 mt-2.5">
