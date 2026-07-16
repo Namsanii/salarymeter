@@ -699,7 +699,7 @@ export default function SalaryMeter() {
       type="time"
       value={workStart}
       onChange={(e) => setWorkStart(e.target.value)}
-      className="w-[120px] border border-neutral-300 text-neutral-900 text-[12px] px-1 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
+      className="w-[130px] border border-neutral-300 text-neutral-900 text-[12px] px-1 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
     />
   </div>
 
@@ -708,7 +708,7 @@ export default function SalaryMeter() {
       type="time"
       value={workEnd}
       onChange={(e) => setWorkEnd(e.target.value)}
-      className="w-[120px] border border-neutral-300 text-neutral-900 text-[12px] px-1 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
+      className="w-[130px] border border-neutral-300 text-neutral-900 text-[12px] px-1 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
     />
   </div>
 </div>
