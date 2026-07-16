@@ -59,10 +59,74 @@ const RATE_INTERVALS: { label: string; seconds: number }[] = [
   { label: "1시간", seconds: 3600 },
 ];
 
+const EMOJI_MAP: [string, string][] = [
+  ["커피", "☕"],
+  ["카페", "☕"],
+  ["라떼", "☕"],
+  ["피자", "🍕"],
+  ["치킨", "🍗"],
+  ["햄버거", "🍔"],
+  ["목걸이", "💎"],
+  ["반지", "💍"],
+  ["귀걸이", "💎"],
+  ["신발", "👟"],
+  ["운동화", "👟"],
+  ["가방", "👜"],
+  ["여행", "✈️"],
+  ["항공권", "✈️"],
+  ["옷", "👕"],
+  ["게임", "🎮"],
+  ["책", "📚"],
+  ["노트북", "💻"],
+  ["컴퓨터", "💻"],
+  ["폰", "📱"],
+  ["휴대폰", "📱"],
+  ["시계", "⌚"],
+  ["케이크", "🎂"],
+  ["맥주", "🍺"],
+  ["와인", "🍷"],
+  ["술", "🍶"],
+  ["꽃", "💐"],
+  ["향수", "🌸"],
+  ["자동차", "🚗"],
+  ["차", "☕"],
+];
+
+function getEmoji(name: string): string {
+  const found = EMOJI_MAP.find(([keyword]) => name.includes(keyword));
+  return found ? found[1] : "🎁";
+}
+
+const CONFETTI_EMOJIS = ["🎉", "✨", "🎊", "⭐️", "💛", "💫"];
+
 interface WishItem {
   id: string;
   name: string;
   priceWon: number;
+}
+
+interface ConfettiParticle {
+  id: number;
+  emoji: string;
+  tx: number;
+  ty: number;
+  rotate: number;
+  delay: number;
+}
+
+function makeConfetti(): ConfettiParticle[] {
+  return Array.from({ length: 28 }, (_, i) => {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 120 + Math.random() * 180;
+    return {
+      id: i,
+      emoji: CONFETTI_EMOJIS[Math.floor(Math.random() * CONFETTI_EMOJIS.length)],
+      tx: Math.cos(angle) * distance,
+      ty: Math.sin(angle) * distance - 60,
+      rotate: (Math.random() - 0.5) * 720,
+      delay: Math.random() * 0.15,
+    };
+  });
 }
 
 export default function SalaryMeter() {
@@ -78,7 +142,8 @@ export default function SalaryMeter() {
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [newItemName, setNewItemName] = useState("");
   const [newItemPriceDigits, setNewItemPriceDigits] = useState("");
-  const [toast, setToast] = useState<string | null>(null);
+  const [celebration, setCelebration] = useState<WishItem | null>(null);
+  const [confetti, setConfetti] = useState<ConfettiParticle[]>([]);
   const achievedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -107,9 +172,14 @@ export default function SalaryMeter() {
     );
     if (newlyAchieved.length > 0) {
       newlyAchieved.forEach((w) => achievedRef.current.add(w.id));
-      setToast(`🎉 ${newlyAchieved[0].name} 살 수 있어요!`);
-      const t = setTimeout(() => setToast(null), 4000);
-      return () => clearTimeout(t);
+      setCelebration(newlyAchieved[0]);
+      setConfetti(makeConfetti());
+      const t1 = setTimeout(() => setCelebration(null), 3200);
+      const t2 = setTimeout(() => setConfetti([]), 1800);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
     }
   }, [earned, wishlist, view]);
 
@@ -142,7 +212,8 @@ export default function SalaryMeter() {
   const handleConfirm = () => {
     if (!salaryManwonDigits || salary <= 0) return;
     achievedRef.current = new Set();
-    setToast(null);
+    setCelebration(null);
+    setConfetti([]);
     setStartTime(Date.now());
     setNow(Date.now());
     setView("result");
@@ -152,15 +223,43 @@ export default function SalaryMeter() {
     setView("form");
     setStartTime(null);
     achievedRef.current = new Set();
-    setToast(null);
+    setCelebration(null);
+    setConfetti([]);
   };
 
   if (view === "result") {
     return (
-      <div className="w-full max-w-[420px] mx-auto min-h-screen flex flex-col items-center justify-center px-4 py-10 relative">
-        {toast && (
-          <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-neutral-900 text-white text-[14px] px-4 py-2.5 rounded-full shadow-lg z-10 whitespace-nowrap">
-            {toast}
+      <div className="w-full max-w-[420px] mx-auto min-h-screen flex flex-col items-center justify-center px-4 py-10 relative overflow-hidden">
+        {confetti.length > 0 && (
+          <div className="fixed inset-0 pointer-events-none z-20 flex items-center justify-center">
+            {confetti.map((p) => (
+              <span
+                key={p.id}
+                className="absolute text-[22px] animate-[confetti-burst_1.1s_ease-out_forwards]"
+                style={
+                  {
+                    "--tx": `${p.tx}px`,
+                    "--ty": `${p.ty}px`,
+                    "--r": `${p.rotate}deg`,
+                    animationDelay: `${p.delay}s`,
+                  } as React.CSSProperties
+                }
+              >
+                {p.emoji}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {celebration && (
+          <div className="fixed top-1/2 left-1/2 z-30 bg-white border border-neutral-200 shadow-2xl rounded-2xl px-8 py-6 flex flex-col items-center animate-[toast-pop_0.4s_ease-out_forwards]">
+            <div className="text-[48px] mb-1 leading-none">{getEmoji(celebration.name)}</div>
+            <div className="text-[16px] font-bold text-neutral-900 mb-0.5">
+              {celebration.name} 살 수 있어요!
+            </div>
+            <div className="text-[13px] text-neutral-400">
+              {fmtWon(celebration.priceWon)}원 달성
+            </div>
           </div>
         )}
 
@@ -198,7 +297,7 @@ export default function SalaryMeter() {
                   } ${done ? "bg-neutral-50" : ""}`}
                 >
                   <span className={done ? "text-neutral-900" : "text-neutral-500"}>
-                    {done ? "✅ " : ""}
+                    <span className="mr-1.5">{getEmoji(w.name)}</span>
                     {w.name}
                   </span>
                   <span
@@ -280,7 +379,10 @@ export default function SalaryMeter() {
                   key={w.id}
                   className="flex items-center justify-between text-[13px] bg-neutral-50 rounded-lg px-3 py-2"
                 >
-                  <span className="text-neutral-700">{w.name}</span>
+                  <span className="text-neutral-700">
+                    <span className="mr-1.5">{getEmoji(w.name)}</span>
+                    {w.name}
+                  </span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-neutral-500">{fmtWon(w.priceWon)}원</span>
                     <button

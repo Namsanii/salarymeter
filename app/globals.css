@@ -5,3 +5,35 @@ body {
   background: #ffffff;
   color: #171717;
 }
+
+@keyframes confetti-burst {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx), var(--ty)) rotate(var(--r)) scale(0.5);
+    opacity: 0;
+  }
+}
+
+@keyframes toast-pop {
+  0% {
+    transform: translate(-50%, -40%) scale(0.7);
+    opacity: 0;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+  }
+}
