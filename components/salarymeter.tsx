@@ -50,6 +50,17 @@ function fmtWon(n: number): string {
   return Math.max(0, Math.round(n)).toLocaleString("ko-KR");
 }
 
+function formatDuration(seconds: number): string {
+  if (!isFinite(seconds) || seconds < 0) return "계산 중";
+  const s = Math.ceil(seconds);
+  if (s < 60) return `${s}초`;
+  const m = Math.floor(s / 60);
+  const remS = s % 60;
+  if (m < 60) return remS > 0 ? `${m}분 ${remS}초` : `${m}분`;
+  const h = Math.floor(m / 60);
+  const remM = m % 60;
+  return remM > 0 ? `${h}시간 ${remM}분` : `${h}시간`;
+}
 const RATE_INTERVALS: { label: string; seconds: number }[] = [
   { label: "1초", seconds: 1 },
   { label: "1분", seconds: 60 },
@@ -165,6 +176,10 @@ export default function SalaryMeter() {
     return Math.max(0, elapsedSec) * perSecond;
   }, [now, startTime, perSecond]);
 
+const upcoming = useMemo(() => {
+    return wishlist.filter((w) => earned < w.priceWon).slice(0, 2);
+  }, [wishlist, earned]);
+
  useEffect(() => {
     if (view !== "result") return;
     const newlyAchieved = wishlist.filter(
@@ -273,8 +288,27 @@ export default function SalaryMeter() {
         <div className="font-mono font-bold text-[clamp(32px,9vw,52px)] text-neutral-900 tabular-nums mb-2 text-center">
           {fmtWon(earned)}원
         </div>
-        <div className="text-[15px] text-neutral-500 mb-8">벌었습니다</div>
+<div className="text-[15px] text-neutral-500 mb-6">벌었습니다</div>
 
+        {upcoming.length > 0 && (
+          <div className="w-full mb-6 space-y-1.5">
+            {upcoming.map((w, idx) => {
+              const remainingWon = w.priceWon - earned;
+              const remainingSec = perSecond > 0 ? remainingWon / perSecond : Infinity;
+              return (
+                <div key={w.id} className="text-[13px] text-neutral-500 text-center">
+                  <span className="mr-1">{getEmoji(w.name)}</span>
+                  {idx === 0 ? "" : `${idx + 1}번째, `}
+                  {w.name}까지{" "}
+                  <span className="font-mono font-semibold text-neutral-900">
+                    {formatDuration(remainingSec)}
+                  </span>{" "}
+                  남았습니다
+                </div>
+              );
+            })}
+          </div>
+        )}
         <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-6">
           {RATE_INTERVALS.map((r, i) => (
             <div
