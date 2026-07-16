@@ -677,46 +677,53 @@ export default function SalaryMeter() {
         </div>
 
         <div>
-          <label className="block text-[13px] text-neutral-500 mb-1.5">
-            연간 근무일수 <span className="text-neutral-400">(주말·공휴일 제외 자동 계산됨)</span>
-          </label>
-          <input
-            type="number"
-            value={workdays}
-            onChange={(e) => setWorkdays(e.target.value)}
-            className="w-full border border-neutral-300 text-neutral-900 text-[16px] px-3 py-2.5 rounded-lg outline-none focus:border-neutral-900 text-right font-mono"
-          />
-        </div>
+  <label className="block text-[13px] text-neutral-500 mb-1.5">
+    연간 근무일수 <span className="text-neutral-400">(주말·공휴일 제외 자동 계산됨)</span>
+  </label>
+  <input
+    type="number"
+    value={workdays}
+    onChange={(e) => setWorkdays(e.target.value)}
+    className="w-full border border-neutral-300 text-neutral-900 text-[16px] px-3 py-2.5 rounded-lg outline-none focus:border-neutral-900 text-right font-mono"
+  />
+</div>
 
-        <div>
-          <label className="block text-[13px] text-neutral-500 mb-1.5">근무 시간</label>
-          <div className="grid grid-cols-2 gap-3">
-            <input
-              type="time"
-              value={workStart}
-              onChange={(e) => setWorkStart(e.target.value)}
-              className="w-full border border-neutral-300 text-neutral-900 text-[12px] px-1 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
-            />
-            <input
-              type="time"
-              value={workEnd}
-              onChange={(e) => setWorkEnd(e.target.value)}
-              className="w-full border border-neutral-300 text-neutral-900 text-[12px] px-1 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
-            />
-          </div>
-          <div className="flex items-center gap-2 mt-2.5">
-            <input
-              type="checkbox"
-              id="weekdaysOnly"
-              checked={weekdaysOnly}
-              onChange={(e) => setWeekdaysOnly(e.target.checked)}
-              className="w-[15px] h-[15px] accent-neutral-900"
-            />
-            <label htmlFor="weekdaysOnly" className="text-[12.5px] text-neutral-500">
-              주말은 카운트 멈추기
-            </label>
-          </div>
-        </div>
+<div>
+  <label className="block text-[13px] text-neutral-500 mb-1.5">
+    근무 시간
+  </label>
+
+  <div className="flex gap-3">
+    <input
+      type="time"
+      value={workStart}
+      onChange={(e) => setWorkStart(e.target.value)}
+      className="w-[120px] border border-neutral-300 text-neutral-900 text-[12px] px-1 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
+    />
+    <input
+      type="time"
+      value={workEnd}
+      onChange={(e) => setWorkEnd(e.target.value)}
+      className="w-[120px] border border-neutral-300 text-neutral-900 text-[12px] px-1 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
+    />
+  </div>
+
+  <div className="flex items-center gap-2 mt-2.5">
+    <input
+      type="checkbox"
+      id="weekdaysOnly"
+      checked={weekdaysOnly}
+      onChange={(e) => setWeekdaysOnly(e.target.checked)}
+      className="w-[15px] h-[15px] accent-neutral-900"
+    />
+    <label
+      htmlFor="weekdaysOnly"
+      className="text-[12.5px] text-neutral-500"
+    >
+      주말은 카운트 멈추기
+    </label>
+  </div>
+</div>
 
         <div className="pt-2 border-t border-neutral-200">
           <label className="block text-[13px] text-neutral-500 mb-2 mt-4">
