@@ -690,7 +690,7 @@ export default function SalaryMeter() {
 
         <div>
           <label className="block text-[13px] text-neutral-500 mb-1.5">근무 시간</label>
-          <<div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <input
               type="time"
               value={workStart}
