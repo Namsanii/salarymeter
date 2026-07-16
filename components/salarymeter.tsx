@@ -416,20 +416,20 @@ export default function SalaryMeter() {
               return (
                 <div
                   key={w.id}
-                  className={`px-4 py-3 text-[14px] ${
+                  className={`px-4 py-3.5 text-[17px] ${
                     i !== wishlist.length - 1 ? "border-b border-neutral-200" : ""
                   } ${count > 0 ? "bg-neutral-50" : ""}`}
                 >
-                  <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center justify-between mb-1">
                     <span className="text-neutral-800">
                       <span className="mr-1.5">{getEmoji(w.name)}</span>
                       {w.name}
                     </span>
-                    <span className="font-mono text-neutral-400 text-[13px]">
+                    <span className="font-mono text-neutral-400 text-[15px]">
                       {fmtWon(w.priceWon)}원
                     </span>
                   </div>
-                  <div className="text-[12.5px] text-neutral-500">
+                  <div className="text-[14px] text-neutral-500">
                     {count > 0 && (
                       <span className="font-semibold text-neutral-900">{count}개 벌었어요</span>
                     )}
@@ -555,30 +555,30 @@ export default function SalaryMeter() {
         <div className="w-full mb-6">
           <div className="grid grid-cols-3 gap-px bg-neutral-200 rounded-xl overflow-hidden border border-neutral-200">
             {RATE_INTERVALS.map((r) => (
-              <div key={r.label} className="bg-white text-center py-3 px-2">
-                <div className="text-[11px] text-neutral-400 mb-1">{r.label}당</div>
-                <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
+              <div key={r.label} className="bg-white text-center py-4 px-2">
+                <div className="text-[13px] text-neutral-400 mb-1.5">{r.label}당</div>
+                <div className="font-mono text-[16px] font-semibold text-neutral-900 tabular-nums">
                   {fmtWon(perSecond * r.seconds)}원
                 </div>
               </div>
             ))}
           </div>
           <div className="grid grid-cols-3 gap-px bg-neutral-200 rounded-xl overflow-hidden border border-neutral-200 mt-2">
-            <div className="bg-white text-center py-3 px-2">
-              <div className="text-[11px] text-neutral-400 mb-1">1시간당</div>
-              <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
+            <div className="bg-white text-center py-4 px-2">
+              <div className="text-[13px] text-neutral-400 mb-1.5">1시간당</div>
+              <div className="font-mono text-[16px] font-semibold text-neutral-900 tabular-nums">
                 {fmtWon(perSecond * 3600)}원
               </div>
             </div>
-            <div className="bg-white text-center py-3 px-2">
-              <div className="text-[11px] text-neutral-400 mb-1">하루당</div>
-              <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
+            <div className="bg-white text-center py-4 px-2">
+              <div className="text-[13px] text-neutral-400 mb-1.5">하루당</div>
+              <div className="font-mono text-[16px] font-semibold text-neutral-900 tabular-nums">
                 {fmtWon(perSecond * hoursNum * 3600)}원
               </div>
             </div>
-            <div className="bg-white text-center py-3 px-2">
-              <div className="text-[11px] text-neutral-400 mb-1">한 달당</div>
-              <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
+            <div className="bg-white text-center py-4 px-2">
+              <div className="text-[13px] text-neutral-400 mb-1.5">한 달당</div>
+              <div className="font-mono text-[16px] font-semibold text-neutral-900 tabular-nums">
                 {fmtWon(salary / 12)}원
               </div>
             </div>
