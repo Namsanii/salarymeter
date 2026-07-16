@@ -59,8 +59,12 @@ function formatDuration(seconds: number): string {
   if (m < 60) return remS > 0 ? `${m}분 ${remS}초` : `${m}분`;
   const h = Math.floor(m / 60);
   const remM = m % 60;
-  return remM > 0 ? `${h}시간 ${remM}분` : `${h}시간`;
+  if (h < 24) return remM > 0 ? `${h}시간 ${remM}분` : `${h}시간`;
+  const days = Math.floor(h / 24);
+  const remH = h % 24;
+  return remH > 0 ? `${days}일 ${remH}시간` : `${days}일`;
 }
+
 const RATE_INTERVALS: { label: string; seconds: number }[] = [
   { label: "1초", seconds: 1 },
   { label: "1분", seconds: 60 },
@@ -140,6 +144,11 @@ function makeConfetti(): ConfettiParticle[] {
   });
 }
 
+interface CelebrationInfo {
+  item: WishItem;
+  count: number;
+}
+
 export default function SalaryMeter() {
   const currentYear = new Date().getFullYear();
 
@@ -153,9 +162,9 @@ export default function SalaryMeter() {
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [newItemName, setNewItemName] = useState("");
   const [newItemPriceDigits, setNewItemPriceDigits] = useState("");
-  const [celebration, setCelebration] = useState<WishItem | null>(null);
+  const [celebration, setCelebration] = useState<CelebrationInfo | null>(null);
   const [confetti, setConfetti] = useState<ConfettiParticle[]>([]);
-  const achievedRef = useRef<Set<string>>(new Set());
+  const celebratedCountRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
     if (view !== "result") return;
@@ -176,19 +185,17 @@ export default function SalaryMeter() {
     return Math.max(0, elapsedSec) * perSecond;
   }, [now, startTime, perSecond]);
 
-const upcoming = useMemo(() => {
-    return wishlist.filter((w) => earned < w.priceWon).slice(0, 2);
-  }, [wishlist, earned]);
-
- useEffect(() => {
+  useEffect(() => {
     if (view !== "result") return;
-    const newlyAchieved = wishlist.filter(
-      (w) => earned >= w.priceWon && !achievedRef.current.has(w.id)
-    );
-    if (newlyAchieved.length > 0) {
-      newlyAchieved.forEach((w) => achievedRef.current.add(w.id));
-      setCelebration(newlyAchieved[0]);
-      setConfetti(makeConfetti());
+    for (const w of wishlist) {
+      const count = Math.floor(earned / w.priceWon);
+      const prevCount = celebratedCountRef.current.get(w.id) ?? 0;
+      if (count > prevCount) {
+        celebratedCountRef.current.set(w.id, count);
+        setCelebration({ item: w, count });
+        setConfetti(makeConfetti());
+        break;
+      }
     }
   }, [earned, wishlist, view]);
 
@@ -232,7 +239,7 @@ const upcoming = useMemo(() => {
 
   const handleConfirm = () => {
     if (!salaryManwonDigits || salary <= 0) return;
-    achievedRef.current = new Set();
+    celebratedCountRef.current = new Map();
     setCelebration(null);
     setConfetti([]);
     setStartTime(Date.now());
@@ -243,7 +250,7 @@ const upcoming = useMemo(() => {
   const handleBack = () => {
     setView("form");
     setStartTime(null);
-    achievedRef.current = new Set();
+    celebratedCountRef.current = new Map();
     setCelebration(null);
     setConfetti([]);
   };
@@ -274,12 +281,12 @@ const upcoming = useMemo(() => {
 
         {celebration && (
           <div className="fixed top-1/2 left-1/2 z-30 bg-white border border-neutral-200 shadow-2xl rounded-2xl px-8 py-6 flex flex-col items-center animate-[toast-pop_0.4s_ease-out_forwards]">
-            <div className="text-[48px] mb-1 leading-none">{getEmoji(celebration.name)}</div>
+            <div className="text-[48px] mb-1 leading-none">{getEmoji(celebration.item.name)}</div>
             <div className="text-[16px] font-bold text-neutral-900 mb-0.5">
-              {celebration.name} 살 수 있어요!
+              {celebration.item.name} {celebration.count}개 벌었어요!
             </div>
             <div className="text-[13px] text-neutral-400">
-              {fmtWon(celebration.priceWon)}원 달성
+              {fmtWon(celebration.item.priceWon)}원짜리 기준
             </div>
           </div>
         )}
@@ -288,27 +295,8 @@ const upcoming = useMemo(() => {
         <div className="font-mono font-bold text-[clamp(32px,9vw,52px)] text-neutral-900 tabular-nums mb-2 text-center">
           {fmtWon(earned)}원
         </div>
-<div className="text-[15px] text-neutral-500 mb-6">벌었습니다</div>
+        <div className="text-[15px] text-neutral-500 mb-8">벌었습니다</div>
 
-        {upcoming.length > 0 && (
-          <div className="w-full mb-6 space-y-1.5">
-            {upcoming.map((w, idx) => {
-              const remainingWon = w.priceWon - earned;
-              const remainingSec = perSecond > 0 ? remainingWon / perSecond : Infinity;
-              return (
-                <div key={w.id} className="text-[13px] text-neutral-500 text-center">
-                  <span className="mr-1">{getEmoji(w.name)}</span>
-                  {idx === 0 ? "" : `${idx + 1}번째, `}
-                  {w.name}까지{" "}
-                  <span className="font-mono font-semibold text-neutral-900">
-                    {formatDuration(remainingSec)}
-                  </span>{" "}
-                  남았습니다
-                </div>
-              );
-            })}
-          </div>
-        )}
         <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-6">
           {RATE_INTERVALS.map((r, i) => (
             <div
@@ -328,25 +316,32 @@ const upcoming = useMemo(() => {
         {wishlist.length > 0 && (
           <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-8">
             {wishlist.map((w, i) => {
-              const done = earned >= w.priceWon;
+              const count = Math.floor(earned / w.priceWon);
+              const remainingWon = w.priceWon * (count + 1) - earned;
+              const remainingSec = perSecond > 0 ? remainingWon / perSecond : Infinity;
               return (
                 <div
                   key={w.id}
-                  className={`flex items-center justify-between px-4 py-3 text-[14px] ${
+                  className={`px-4 py-3 text-[14px] ${
                     i !== wishlist.length - 1 ? "border-b border-neutral-200" : ""
-                  } ${done ? "bg-neutral-50" : ""}`}
+                  } ${count > 0 ? "bg-neutral-50" : ""}`}
                 >
-                  <span className={done ? "text-neutral-900" : "text-neutral-500"}>
-                    <span className="mr-1.5">{getEmoji(w.name)}</span>
-                    {w.name}
-                  </span>
-                  <span
-                    className={`font-mono tabular-nums ${
-                      done ? "text-neutral-900 font-medium" : "text-neutral-400"
-                    }`}
-                  >
-                    {fmtWon(w.priceWon)}원
-                  </span>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-neutral-800">
+                      <span className="mr-1.5">{getEmoji(w.name)}</span>
+                      {w.name}
+                    </span>
+                    <span className="font-mono text-neutral-400 text-[13px]">
+                      {fmtWon(w.priceWon)}원
+                    </span>
+                  </div>
+                  <div className="text-[12.5px] text-neutral-500">
+                    {count > 0 && (
+                      <span className="font-semibold text-neutral-900">{count}개 벌었어요</span>
+                    )}
+                    {count > 0 && " · "}
+                    다음까지 {formatDuration(remainingSec)}
+                  </div>
                 </div>
               );
             })}
