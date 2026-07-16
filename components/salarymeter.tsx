@@ -162,6 +162,11 @@ export default function SalaryMeter() {
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [newItemName, setNewItemName] = useState("");
   const [newItemPriceDigits, setNewItemPriceDigits] = useState("");
+  const [searchResults, setSearchResults] = useState
+    { title: string; price: number; mallName: string }[]
+  >([]);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [celebration, setCelebration] = useState<CelebrationInfo | null>(null);
   const [confetti, setConfetti] = useState<ConfettiParticle[]>([]);
   const celebratedCountRef = useRef<Map<string, number>>(new Map());
@@ -219,6 +224,33 @@ export default function SalaryMeter() {
   const handleItemPriceChange = (e: ChangeEvent<HTMLInputElement>) => {
     const digits = e.target.value.replace(/[^0-9]/g, "");
     setNewItemPriceDigits(digits);
+  };
+
+  const handleSearch = async () => {
+    if (!newItemName.trim()) return;
+    setSearching(true);
+    setSearchError(null);
+    setSearchResults([]);
+    try {
+      const res = await fetch(
+        `/api/search-shop?query=${encodeURIComponent(newItemName.trim())}`
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        setSearchError(data.error || "검색에 실패했어요.");
+        return;
+      }
+      setSearchResults(data.items || []);
+    } catch {
+      setSearchError("검색 중 오류가 발생했어요.");
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleSelectResult = (r: { title: string; price: number }) => {
+    setNewItemPriceDigits(String(r.price));
+    setSearchResults([]);
   };
 
   const handleAddItem = () => {
@@ -433,7 +465,7 @@ export default function SalaryMeter() {
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 mb-2">
             <input
               type="text"
               value={newItemName}
@@ -441,13 +473,50 @@ export default function SalaryMeter() {
               placeholder="예: 커피"
               className="flex-1 min-w-0 border border-neutral-300 text-neutral-900 text-[14px] px-3 py-2 rounded-lg outline-none focus:border-neutral-900"
             />
+            <button
+              onClick={handleSearch}
+              disabled={!newItemName.trim() || searching}
+              className="shrink-0 text-[13px] font-medium text-neutral-900 border border-neutral-300 rounded-lg px-3 py-2 hover:bg-neutral-50 disabled:text-neutral-300 disabled:cursor-not-allowed"
+            >
+              {searching ? "검색 중..." : "가격 검색"}
+            </button>
+          </div>
+
+          {searchError && (
+            <div className="text-[12px] text-red-500 mb-2">{searchError}</div>
+          )}
+
+          {searchResults.length > 0 && (
+            <div className="mb-3 border border-neutral-200 rounded-lg overflow-hidden">
+              {searchResults.map((r, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => handleSelectResult(r)}
+                  className={`w-full text-left px-3 py-2 text-[12.5px] hover:bg-neutral-50 flex items-center justify-between gap-3 ${
+                    i !== searchResults.length - 1 ? "border-b border-neutral-200" : ""
+                  }`}
+                >
+                  <span className="truncate text-neutral-700">
+                    {r.title}
+                    <span className="text-neutral-400"> · {r.mallName}</span>
+                  </span>
+                  <span className="font-mono text-neutral-900 shrink-0">
+                    {fmtWon(r.price)}원
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-2">
             <input
               type="text"
               inputMode="numeric"
               value={formatWithCommas(newItemPriceDigits)}
               onChange={handleItemPriceChange}
-              placeholder="4000"
-              className="w-[100px] border border-neutral-300 text-neutral-900 text-[14px] px-2 py-2 rounded-lg outline-none focus:border-neutral-900 text-right font-mono"
+              placeholder="가격 직접 입력 (원)"
+              className="flex-1 min-w-0 border border-neutral-300 text-neutral-900 text-[14px] px-3 py-2 rounded-lg outline-none focus:border-neutral-900 text-right font-mono"
             />
             <button
               onClick={handleAddItem}
