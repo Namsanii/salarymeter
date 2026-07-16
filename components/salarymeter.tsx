@@ -407,39 +407,6 @@ export default function SalaryMeter() {
           {workStatus === "weekend" && "주말 · 카운트가 멈춰있어요"}
         </div>
 
-        <div className="w-full mb-6">
-          <div className="grid grid-cols-3 gap-px bg-neutral-200 rounded-xl overflow-hidden border border-neutral-200">
-            {RATE_INTERVALS.map((r) => (
-              <div key={r.label} className="bg-white text-center py-3 px-2">
-                <div className="text-[11px] text-neutral-400 mb-1">{r.label}당</div>
-                <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
-                  {fmtWon(perSecond * r.seconds)}원
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-3 gap-px bg-neutral-200 rounded-xl overflow-hidden border border-neutral-200 mt-2">
-            <div className="bg-white text-center py-3 px-2">
-              <div className="text-[11px] text-neutral-400 mb-1">1시간당</div>
-              <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
-                {fmtWon(perSecond * 3600)}원
-              </div>
-            </div>
-            <div className="bg-white text-center py-3 px-2">
-              <div className="text-[11px] text-neutral-400 mb-1">하루당</div>
-              <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
-                {fmtWon(perSecond * hoursNum * 3600)}원
-              </div>
-            </div>
-            <div className="bg-white text-center py-3 px-2">
-              <div className="text-[11px] text-neutral-400 mb-1">한 달당</div>
-              <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
-                {fmtWon(salary / 12)}원
-              </div>
-            </div>
-          </div>
-        </div>
-
         {wishlist.length > 0 && !editingWishlist && (
           <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-4">
             {wishlist.map((w, i) => {
@@ -584,6 +551,39 @@ export default function SalaryMeter() {
         >
           {editingWishlist ? "완료" : "위시리스트 수정"}
         </button>
+
+        <div className="w-full mb-6">
+          <div className="grid grid-cols-3 gap-px bg-neutral-200 rounded-xl overflow-hidden border border-neutral-200">
+            {RATE_INTERVALS.map((r) => (
+              <div key={r.label} className="bg-white text-center py-3 px-2">
+                <div className="text-[11px] text-neutral-400 mb-1">{r.label}당</div>
+                <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
+                  {fmtWon(perSecond * r.seconds)}원
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-3 gap-px bg-neutral-200 rounded-xl overflow-hidden border border-neutral-200 mt-2">
+            <div className="bg-white text-center py-3 px-2">
+              <div className="text-[11px] text-neutral-400 mb-1">1시간당</div>
+              <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
+                {fmtWon(perSecond * 3600)}원
+              </div>
+            </div>
+            <div className="bg-white text-center py-3 px-2">
+              <div className="text-[11px] text-neutral-400 mb-1">하루당</div>
+              <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
+                {fmtWon(perSecond * hoursNum * 3600)}원
+              </div>
+            </div>
+            <div className="bg-white text-center py-3 px-2">
+              <div className="text-[11px] text-neutral-400 mb-1">한 달당</div>
+              <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
+                {fmtWon(salary / 12)}원
+              </div>
+            </div>
+          </div>
+        </div>
 
         <button
           onClick={handleBack}
