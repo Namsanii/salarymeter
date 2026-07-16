@@ -165,7 +165,7 @@ export default function SalaryMeter() {
     return Math.max(0, elapsedSec) * perSecond;
   }, [now, startTime, perSecond]);
 
-  useEffect(() => {
+ useEffect(() => {
     if (view !== "result") return;
     const newlyAchieved = wishlist.filter(
       (w) => earned >= w.priceWon && !achievedRef.current.has(w.id)
@@ -174,14 +174,20 @@ export default function SalaryMeter() {
       newlyAchieved.forEach((w) => achievedRef.current.add(w.id));
       setCelebration(newlyAchieved[0]);
       setConfetti(makeConfetti());
-      const t1 = setTimeout(() => setCelebration(null), 3200);
-      const t2 = setTimeout(() => setConfetti([]), 1800);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-      };
     }
   }, [earned, wishlist, view]);
+
+  useEffect(() => {
+    if (!celebration) return;
+    const t = setTimeout(() => setCelebration(null), 3200);
+    return () => clearTimeout(t);
+  }, [celebration]);
+
+  useEffect(() => {
+    if (confetti.length === 0) return;
+    const t = setTimeout(() => setConfetti([]), 1800);
+    return () => clearTimeout(t);
+  }, [confetti]);
 
   const handleSalaryChange = (e: ChangeEvent<HTMLInputElement>) => {
     const digits = e.target.value.replace(/[^0-9]/g, "");
