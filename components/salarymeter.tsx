@@ -115,11 +115,9 @@ function getWorkStatus(
 }
 
 const RATE_INTERVALS: { label: string; seconds: number }[] = [
-  { label: "1초", seconds: 1 },
   { label: "1분", seconds: 60 },
-  { label: "15분", seconds: 900 },
+  { label: "10분", seconds: 600 },
   { label: "30분", seconds: 1800 },
-  { label: "45분", seconds: 2700 },
   { label: "1시간", seconds: 3600 },
 ];
 
@@ -411,12 +409,10 @@ export default function SalaryMeter() {
         </div>
 
         <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-6">
-          {RATE_INTERVALS.map((r, i) => (
+          {RATE_INTERVALS.map((r) => (
             <div
               key={r.label}
-              className={`flex items-center justify-between px-4 py-3 text-[14px] ${
-                i !== RATE_INTERVALS.length - 1 ? "border-b border-neutral-200" : ""
-              }`}
+              className="flex items-center justify-between px-4 py-3 text-[14px] border-b border-neutral-200"
             >
               <span className="text-neutral-500">{r.label}당</span>
               <span className="font-mono font-medium text-neutral-900 tabular-nums">
@@ -424,6 +420,18 @@ export default function SalaryMeter() {
               </span>
             </div>
           ))}
+          <div className="flex items-center justify-between px-4 py-3 text-[14px] border-b border-neutral-200">
+            <span className="text-neutral-500">하루당</span>
+            <span className="font-mono font-medium text-neutral-900 tabular-nums">
+              {fmtWon(perSecond * hoursNum * 3600)}원
+            </span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3 text-[14px]">
+            <span className="text-neutral-500">한 달당</span>
+            <span className="font-mono font-medium text-neutral-900 tabular-nums">
+              {fmtWon(salary / 12)}원
+            </span>
+          </div>
         </div>
 
         {wishlist.length > 0 && !editingWishlist && (
