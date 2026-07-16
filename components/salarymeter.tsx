@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 
 const HOLIDAYS_2026 = [
   "2026-01-01",
@@ -59,6 +59,12 @@ const RATE_INTERVALS: { label: string; seconds: number }[] = [
   { label: "1시간", seconds: 3600 },
 ];
 
+interface WishItem {
+  id: string;
+  name: string;
+  priceWon: number;
+}
+
 export default function SalaryMeter() {
   const currentYear = new Date().getFullYear();
 
@@ -68,6 +74,12 @@ export default function SalaryMeter() {
   const [view, setView] = useState<"form" | "result">("form");
   const [startTime, setStartTime] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
+
+  const [wishlist, setWishlist] = useState<WishItem[]>([]);
+  const [newItemName, setNewItemName] = useState("");
+  const [newItemPriceDigits, setNewItemPriceDigits] = useState("");
+  const [toast, setToast] = useState<string | null>(null);
+  const achievedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (view !== "result") return;
@@ -88,13 +100,49 @@ export default function SalaryMeter() {
     return Math.max(0, elapsedSec) * perSecond;
   }, [now, startTime, perSecond]);
 
+  useEffect(() => {
+    if (view !== "result") return;
+    const newlyAchieved = wishlist.filter(
+      (w) => earned >= w.priceWon && !achievedRef.current.has(w.id)
+    );
+    if (newlyAchieved.length > 0) {
+      newlyAchieved.forEach((w) => achievedRef.current.add(w.id));
+      setToast(`🎉 ${newlyAchieved[0].name} 살 수 있어요!`);
+      const t = setTimeout(() => setToast(null), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [earned, wishlist, view]);
+
   const handleSalaryChange = (e: ChangeEvent<HTMLInputElement>) => {
     const digits = e.target.value.replace(/[^0-9]/g, "");
     setSalaryManwonDigits(digits);
   };
 
+  const handleItemPriceChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const digits = e.target.value.replace(/[^0-9]/g, "");
+    setNewItemPriceDigits(digits);
+  };
+
+  const handleAddItem = () => {
+    const price = Number(newItemPriceDigits || "0");
+    if (!newItemName.trim() || price <= 0) return;
+    setWishlist((prev) =>
+      [...prev, { id: crypto.randomUUID(), name: newItemName.trim(), priceWon: price }].sort(
+        (a, b) => a.priceWon - b.priceWon
+      )
+    );
+    setNewItemName("");
+    setNewItemPriceDigits("");
+  };
+
+  const handleRemoveItem = (id: string) => {
+    setWishlist((prev) => prev.filter((w) => w.id !== id));
+  };
+
   const handleConfirm = () => {
     if (!salaryManwonDigits || salary <= 0) return;
+    achievedRef.current = new Set();
+    setToast(null);
     setStartTime(Date.now());
     setNow(Date.now());
     setView("result");
@@ -103,18 +151,26 @@ export default function SalaryMeter() {
   const handleBack = () => {
     setView("form");
     setStartTime(null);
+    achievedRef.current = new Set();
+    setToast(null);
   };
 
   if (view === "result") {
     return (
-      <div className="w-full max-w-[420px] mx-auto min-h-screen flex flex-col items-center justify-center px-4 py-10">
+      <div className="w-full max-w-[420px] mx-auto min-h-screen flex flex-col items-center justify-center px-4 py-10 relative">
+        {toast && (
+          <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-neutral-900 text-white text-[14px] px-4 py-2.5 rounded-full shadow-lg z-10 whitespace-nowrap">
+            {toast}
+          </div>
+        )}
+
         <div className="text-[13px] text-neutral-400 mb-3 tracking-wide">지금까지</div>
         <div className="font-mono font-bold text-[clamp(32px,9vw,52px)] text-neutral-900 tabular-nums mb-2 text-center">
           {fmtWon(earned)}원
         </div>
         <div className="text-[15px] text-neutral-500 mb-8">벌었습니다</div>
 
-        <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-8">
+        <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-6">
           {RATE_INTERVALS.map((r, i) => (
             <div
               key={r.label}
@@ -130,6 +186,34 @@ export default function SalaryMeter() {
           ))}
         </div>
 
+        {wishlist.length > 0 && (
+          <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-8">
+            {wishlist.map((w, i) => {
+              const done = earned >= w.priceWon;
+              return (
+                <div
+                  key={w.id}
+                  className={`flex items-center justify-between px-4 py-3 text-[14px] ${
+                    i !== wishlist.length - 1 ? "border-b border-neutral-200" : ""
+                  } ${done ? "bg-neutral-50" : ""}`}
+                >
+                  <span className={done ? "text-neutral-900" : "text-neutral-500"}>
+                    {done ? "✅ " : ""}
+                    {w.name}
+                  </span>
+                  <span
+                    className={`font-mono tabular-nums ${
+                      done ? "text-neutral-900 font-medium" : "text-neutral-400"
+                    }`}
+                  >
+                    {fmtWon(w.priceWon)}원
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <button
           onClick={handleBack}
           className="text-[13px] text-neutral-400 underline underline-offset-4 hover:text-neutral-600"
@@ -141,7 +225,7 @@ export default function SalaryMeter() {
   }
 
   return (
-    <div className="w-full max-w-[380px] mx-auto min-h-screen flex flex-col justify-center px-6">
+    <div className="w-full max-w-[380px] mx-auto min-h-screen flex flex-col justify-center px-6 py-10">
       <h1 className="text-[19px] font-bold text-neutral-900 mb-8 text-center">급여 미터기</h1>
 
       <div className="space-y-5">
@@ -182,6 +266,59 @@ export default function SalaryMeter() {
             onChange={(e) => setHours(e.target.value)}
             className="w-full border border-neutral-300 text-neutral-900 text-[16px] px-3 py-2.5 rounded-lg outline-none focus:border-neutral-900 text-right font-mono"
           />
+        </div>
+
+        <div className="pt-2 border-t border-neutral-200">
+          <label className="block text-[13px] text-neutral-500 mb-2 mt-4">
+            위시리스트 <span className="text-neutral-400">(선택, 금액 도달하면 알려드려요)</span>
+          </label>
+
+          {wishlist.length > 0 && (
+            <div className="mb-3 space-y-1.5">
+              {wishlist.map((w) => (
+                <div
+                  key={w.id}
+                  className="flex items-center justify-between text-[13px] bg-neutral-50 rounded-lg px-3 py-2"
+                >
+                  <span className="text-neutral-700">{w.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-neutral-500">{fmtWon(w.priceWon)}원</span>
+                    <button
+                      onClick={() => handleRemoveItem(w.id)}
+                      className="text-neutral-400 hover:text-neutral-700 text-[13px] leading-none"
+                      aria-label="삭제"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
+              placeholder="예: 커피"
+              className="flex-1 min-w-0 border border-neutral-300 text-neutral-900 text-[14px] px-3 py-2 rounded-lg outline-none focus:border-neutral-900"
+            />
+            <input
+              type="text"
+              inputMode="numeric"
+              value={formatWithCommas(newItemPriceDigits)}
+              onChange={handleItemPriceChange}
+              placeholder="4000"
+              className="w-[100px] border border-neutral-300 text-neutral-900 text-[14px] px-2 py-2 rounded-lg outline-none focus:border-neutral-900 text-right font-mono"
+            />
+            <button
+              onClick={handleAddItem}
+              className="shrink-0 text-[13px] font-medium text-neutral-900 border border-neutral-300 rounded-lg px-3 py-2 hover:bg-neutral-50"
+            >
+              추가
+            </button>
+          </div>
         </div>
 
         <button
