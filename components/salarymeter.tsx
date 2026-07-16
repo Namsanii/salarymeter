@@ -62,7 +62,7 @@ const RATE_INTERVALS: { label: string; seconds: number }[] = [
 export default function SalaryMeter() {
   const currentYear = new Date().getFullYear();
 
-  const [salaryDigits, setSalaryDigits] = useState("");
+  const [salaryManwonDigits, setSalaryManwonDigits] = useState("5000");
   const [workdays, setWorkdays] = useState(() => String(getDefaultWorkdays(currentYear)));
   const [hours, setHours] = useState("8");
   const [view, setView] = useState<"form" | "result">("form");
@@ -75,7 +75,8 @@ export default function SalaryMeter() {
     return () => clearInterval(id);
   }, [view]);
 
-  const salary = Number(salaryDigits || "0");
+  const salaryManwon = Number(salaryManwonDigits || "0");
+  const salary = salaryManwon * 10000;
   const workdaysNum = Math.max(1, Number(workdays || "0"));
   const hoursNum = Math.max(0.1, Number(hours || "0"));
 
@@ -89,11 +90,11 @@ export default function SalaryMeter() {
 
   const handleSalaryChange = (e: ChangeEvent<HTMLInputElement>) => {
     const digits = e.target.value.replace(/[^0-9]/g, "");
-    setSalaryDigits(digits);
+    setSalaryManwonDigits(digits);
   };
 
   const handleConfirm = () => {
-    if (!salaryDigits || salary <= 0) return;
+    if (!salaryManwonDigits || salary <= 0) return;
     setStartTime(Date.now());
     setNow(Date.now());
     setView("result");
@@ -145,15 +146,20 @@ export default function SalaryMeter() {
 
       <div className="space-y-5">
         <div>
-          <label className="block text-[13px] text-neutral-500 mb-1.5">연봉 (원)</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={formatWithCommas(salaryDigits)}
-            onChange={handleSalaryChange}
-            placeholder="50,000,000"
-            className="w-full border border-neutral-300 text-neutral-900 text-[16px] px-3 py-2.5 rounded-lg outline-none focus:border-neutral-900 text-right font-mono"
-          />
+          <label className="block text-[13px] text-neutral-500 mb-1.5">연봉 (만원)</label>
+          <div className="relative">
+            <input
+              type="text"
+              inputMode="numeric"
+              value={formatWithCommas(salaryManwonDigits)}
+              onChange={handleSalaryChange}
+              placeholder="5000"
+              className="w-full border border-neutral-300 text-neutral-900 text-[16px] pl-3 pr-14 py-2.5 rounded-lg outline-none focus:border-neutral-900 text-right font-mono"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-neutral-400">
+              만원
+            </span>
+          </div>
         </div>
 
         <div>
@@ -180,7 +186,7 @@ export default function SalaryMeter() {
 
         <button
           onClick={handleConfirm}
-          disabled={!salaryDigits || salary <= 0}
+          disabled={!salaryManwonDigits || salary <= 0}
           className="w-full bg-neutral-900 text-white text-[15px] font-medium py-3 rounded-lg mt-2 disabled:bg-neutral-300 disabled:cursor-not-allowed"
         >
           확인
