@@ -693,13 +693,17 @@ export default function SalaryMeter() {
     근무 시간
   </label>
 
-  <div className="flex gap-3">
+<div className="grid grid-cols-2 gap-3">
+  <div className="flex justify-start">
     <input
       type="time"
       value={workStart}
       onChange={(e) => setWorkStart(e.target.value)}
       className="w-[120px] border border-neutral-300 text-neutral-900 text-[12px] px-1 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
     />
+  </div>
+
+  <div className="flex justify-end">
     <input
       type="time"
       value={workEnd}
@@ -707,6 +711,7 @@ export default function SalaryMeter() {
       className="w-[120px] border border-neutral-300 text-neutral-900 text-[12px] px-1 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
     />
   </div>
+</div>
 
   <div className="flex items-center gap-2 mt-2.5">
     <input
