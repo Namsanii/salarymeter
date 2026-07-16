@@ -118,7 +118,6 @@ const RATE_INTERVALS: { label: string; seconds: number }[] = [
   { label: "1분", seconds: 60 },
   { label: "10분", seconds: 600 },
   { label: "30분", seconds: 1800 },
-  { label: "1시간", seconds: 3600 },
 ];
 
 const EMOJI_MAP: [string, string][] = [
@@ -408,29 +407,36 @@ export default function SalaryMeter() {
           {workStatus === "weekend" && "주말 · 카운트가 멈춰있어요"}
         </div>
 
-        <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-6">
-          {RATE_INTERVALS.map((r) => (
-            <div
-              key={r.label}
-              className="flex items-center justify-between px-4 py-3 text-[14px] border-b border-neutral-200"
-            >
-              <span className="text-neutral-500">{r.label}당</span>
-              <span className="font-mono font-medium text-neutral-900 tabular-nums">
-                {fmtWon(perSecond * r.seconds)}원
-              </span>
-            </div>
-          ))}
-          <div className="flex items-center justify-between px-4 py-3 text-[14px] border-b border-neutral-200">
-            <span className="text-neutral-500">하루당</span>
-            <span className="font-mono font-medium text-neutral-900 tabular-nums">
-              {fmtWon(perSecond * hoursNum * 3600)}원
-            </span>
+        <div className="w-full mb-6">
+          <div className="grid grid-cols-3 gap-px bg-neutral-200 rounded-xl overflow-hidden border border-neutral-200">
+            {RATE_INTERVALS.map((r) => (
+              <div key={r.label} className="bg-white text-center py-3 px-2">
+                <div className="text-[11px] text-neutral-400 mb-1">{r.label}당</div>
+                <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
+                  {fmtWon(perSecond * r.seconds)}원
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="flex items-center justify-between px-4 py-3 text-[14px]">
-            <span className="text-neutral-500">한 달당</span>
-            <span className="font-mono font-medium text-neutral-900 tabular-nums">
-              {fmtWon(salary / 12)}원
-            </span>
+          <div className="grid grid-cols-3 gap-px bg-neutral-200 rounded-xl overflow-hidden border border-neutral-200 mt-2">
+            <div className="bg-white text-center py-3 px-2">
+              <div className="text-[11px] text-neutral-400 mb-1">1시간당</div>
+              <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
+                {fmtWon(perSecond * 3600)}원
+              </div>
+            </div>
+            <div className="bg-white text-center py-3 px-2">
+              <div className="text-[11px] text-neutral-400 mb-1">하루당</div>
+              <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
+                {fmtWon(perSecond * hoursNum * 3600)}원
+              </div>
+            </div>
+            <div className="bg-white text-center py-3 px-2">
+              <div className="text-[11px] text-neutral-400 mb-1">한 달당</div>
+              <div className="font-mono text-[13px] font-semibold text-neutral-900 tabular-nums">
+                {fmtWon(salary / 12)}원
+              </div>
+            </div>
           </div>
         </div>
 
