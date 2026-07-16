@@ -162,9 +162,7 @@ export default function SalaryMeter() {
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [newItemName, setNewItemName] = useState("");
   const [newItemPriceDigits, setNewItemPriceDigits] = useState("");
-  const [searchResults, setSearchResults] = useState
-    { title: string; price: number; mallName: string }[]
-  >([]);
+ const [searchResults, setSearchResults] = useState<{ title: string; price: number; mallName: string }[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [celebration, setCelebration] = useState<CelebrationInfo | null>(null);
