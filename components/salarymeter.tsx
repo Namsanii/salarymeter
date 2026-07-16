@@ -162,7 +162,7 @@ export default function SalaryMeter() {
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [newItemName, setNewItemName] = useState("");
   const [newItemPriceDigits, setNewItemPriceDigits] = useState("");
- const [searchResults, setSearchResults] = useState<{ title: string; price: number; mallName: string }[]>([]);
+const [searchResults, setSearchResults] = useState<{ title: string; price: number; mallName: string; image: string }[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [celebration, setCelebration] = useState<CelebrationInfo | null>(null);
@@ -246,8 +246,8 @@ export default function SalaryMeter() {
     }
   };
 
-  const handleSelectResult = (r: { title: string; price: number }) => {
-    setNewItemPriceDigits(String(r.price));
+const handleSelectResult = (r: { title: string; price: number; image: string }) => {
+      setNewItemPriceDigits(String(r.price));
     setSearchResults([]);
   };
 
@@ -486,16 +486,26 @@ export default function SalaryMeter() {
 
           {searchResults.length > 0 && (
             <div className="mb-3 border border-neutral-200 rounded-lg overflow-hidden">
-              {searchResults.map((r, i) => (
+             {searchResults.map((r, i) => (
                 <button
                   key={i}
                   type="button"
                   onClick={() => handleSelectResult(r)}
-                  className={`w-full text-left px-3 py-2 text-[12.5px] hover:bg-neutral-50 flex items-center justify-between gap-3 ${
+                  className={`w-full text-left px-3 py-2 text-[12.5px] hover:bg-neutral-50 flex items-center gap-3 ${
                     i !== searchResults.length - 1 ? "border-b border-neutral-200" : ""
                   }`}
                 >
-                  <span className="truncate text-neutral-700">
+                  {r.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={r.image}
+                      alt=""
+                      className="w-10 h-10 rounded-md object-cover shrink-0 bg-neutral-100"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-md bg-neutral-100 shrink-0" />
+                  )}
+                  <span className="flex-1 min-w-0 truncate text-neutral-700">
                     {r.title}
                     <span className="text-neutral-400"> · {r.mallName}</span>
                   </span>
