@@ -163,7 +163,7 @@ const EMOJI_MAP: [string, string][] = [
   ["빅맥", "🍔"],
   ["유튜브", "▶️"],
   ["멜론", "🎵"],
-  ["iCloud", "☁️"],
+  ["아이클라우드", "☁️"],
 ];
 
 function getEmoji(name: string): string {
@@ -187,12 +187,12 @@ const SUGGESTED_GROUPS: { category: string; items: { name: string; price: number
     category: "구독료",
     items: [
       { name: "넷플릭스", price: 13500 },
-      { name: "유튜브", price: 14900 },
-      { name: "iCloud 50GB", price: 1100 },
+      { name: "유튜브 프리미엄", price: 14900 },
+      { name: "iCloud", price: 1100 },
     ],
   },
   {
-    category: "교통요금",
+    category: "교통",
     items: [
       { name: "지하철", price: 1550 },
       { name: "버스", price: 1500 },
@@ -202,8 +202,8 @@ const SUGGESTED_GROUPS: { category: string; items: { name: string; price: number
   {
     category: "기타",
     items: [
-      { name: "영화표", price: 15000 },
-      { name: "로또", price: 1000 },
+      { name: "영화표 1장", price: 15000 },
+      { name: "로또 1장", price: 1000 },
     ],
   },
 ];
@@ -585,7 +585,7 @@ export default function SalaryMeter() {
               </div>
             )}
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 mb-3">
               <input
                 type="text"
                 inputMode="numeric"
@@ -600,6 +600,33 @@ export default function SalaryMeter() {
               >
                 추가
               </button>
+            </div>
+
+            <div className="text-[11px] text-neutral-400 mb-1.5">
+              사람들이 많이 등록해요 · 눌러서 바로 추가
+            </div>
+            <div className="space-y-2">
+              {SUGGESTED_GROUPS.map((g) => (
+                <div key={g.category}>
+                  <div className="text-[10.5px] font-semibold text-neutral-500 mb-1">
+                    {g.category}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {g.items.map((s) => (
+                      <button
+                        key={s.name}
+                        type="button"
+                        onClick={() => handleQuickAdd(s.name, s.price)}
+                        className="text-[11.5px] text-neutral-600 border border-neutral-200 rounded-full px-2.5 py-1 hover:bg-neutral-50 flex items-center gap-1"
+                      >
+                        <span>{getEmoji(s.name)}</span>
+                        <span>{s.name}</span>
+                        <span className="text-neutral-400">· {fmtWon(s.price)}원</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -677,58 +704,46 @@ export default function SalaryMeter() {
         </div>
 
         <div>
-  <label className="block text-[13px] text-neutral-500 mb-1.5">
-    연간 근무일수 <span className="text-neutral-400">(주말·공휴일 제외 자동 계산됨)</span>
-  </label>
-  <input
-    type="number"
-    value={workdays}
-    onChange={(e) => setWorkdays(e.target.value)}
-    className="w-full border border-neutral-300 text-neutral-900 text-[16px] px-3 py-2.5 rounded-lg outline-none focus:border-neutral-900 text-right font-mono"
-  />
-</div>
+          <label className="block text-[13px] text-neutral-500 mb-1.5">
+            연간 근무일수 <span className="text-neutral-400">(주말·공휴일 제외 자동 계산됨)</span>
+          </label>
+          <input
+            type="number"
+            value={workdays}
+            onChange={(e) => setWorkdays(e.target.value)}
+            className="w-full border border-neutral-300 text-neutral-900 text-[16px] px-3 py-2.5 rounded-lg outline-none focus:border-neutral-900 text-right font-mono"
+          />
+        </div>
 
-<div>
-  <label className="block text-[13px] text-neutral-500 mb-1.5">
-    근무 시간
-  </label>
-
-<div className="grid grid-cols-2 gap-3">
-  <div className="flex justify-start">
-    <input
-      type="time"
-      value={workStart}
-      onChange={(e) => setWorkStart(e.target.value)}
-      className="w-[130px] border border-neutral-300 text-neutral-900 text-[12px] px-1 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
-    />
-  </div>
-
-  <div className="flex justify-end">
-    <input
-      type="time"
-      value={workEnd}
-      onChange={(e) => setWorkEnd(e.target.value)}
-      className="w-[130px] border border-neutral-300 text-neutral-900 text-[12px] px-1 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
-    />
-  </div>
-</div>
-
-  <div className="flex items-center gap-2 mt-2.5">
-    <input
-      type="checkbox"
-      id="weekdaysOnly"
-      checked={weekdaysOnly}
-      onChange={(e) => setWeekdaysOnly(e.target.checked)}
-      className="w-[15px] h-[15px] accent-neutral-900"
-    />
-    <label
-      htmlFor="weekdaysOnly"
-      className="text-[12.5px] text-neutral-500"
-    >
-      주말은 카운트 멈추기
-    </label>
-  </div>
-</div>
+        <div>
+          <label className="block text-[13px] text-neutral-500 mb-1.5">근무 시간</label>
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="time"
+              value={workStart}
+              onChange={(e) => setWorkStart(e.target.value)}
+              className="w-full border border-neutral-300 text-neutral-900 text-[14px] px-2 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
+            />
+            <input
+              type="time"
+              value={workEnd}
+              onChange={(e) => setWorkEnd(e.target.value)}
+              className="w-full border border-neutral-300 text-neutral-900 text-[14px] px-2 py-2.5 rounded-lg outline-none focus:border-neutral-900 font-mono"
+            />
+          </div>
+          <div className="flex items-center gap-2 mt-2.5">
+            <input
+              type="checkbox"
+              id="weekdaysOnly"
+              checked={weekdaysOnly}
+              onChange={(e) => setWeekdaysOnly(e.target.checked)}
+              className="w-[15px] h-[15px] accent-neutral-900"
+            />
+            <label htmlFor="weekdaysOnly" className="text-[12.5px] text-neutral-500">
+              주말은 카운트 멈추기
+            </label>
+          </div>
+        </div>
 
         <div className="pt-2 border-t border-neutral-200">
           <label className="block text-[13px] text-neutral-500 mb-2 mt-4">
@@ -830,35 +845,6 @@ export default function SalaryMeter() {
             >
               추가
             </button>
-          </div>
-
-          <div>
-            <div className="text-[11.5px] text-neutral-400 mb-2">
-              사람들이 많이 등록해요 · 눌러서 바로 추가 (참고 가격, 나중에 수정 가능)
-            </div>
-            <div className="space-y-2.5">
-              {SUGGESTED_GROUPS.map((g) => (
-                <div key={g.category}>
-                  <div className="text-[11px] font-semibold text-neutral-500 mb-1">
-                    {g.category}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {g.items.map((s) => (
-                      <button
-                        key={s.name}
-                        type="button"
-                        onClick={() => handleQuickAdd(s.name, s.price)}
-                        className="text-[12px] text-neutral-600 border border-neutral-200 rounded-full px-3 py-1.5 hover:bg-neutral-50 flex items-center gap-1"
-                      >
-                        <span>{getEmoji(s.name)}</span>
-                        <span>{s.name}</span>
-                        <span className="text-neutral-400">· {fmtWon(s.price)}원</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
 
