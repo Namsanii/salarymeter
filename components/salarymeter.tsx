@@ -652,13 +652,18 @@ export default function SalaryMeter() {
           <div className="grid grid-cols-3 gap-px bg-neutral-200 rounded-xl overflow-hidden border border-neutral-200">
             {REFERENCE_ITEMS.slice(0, 3).map((it) => {
               const count = Math.floor(earned / it.price);
+              const remainingWon = it.price * (count + 1) - earned;
+              const remainingSec = perSecond > 0 ? remainingWon / perSecond : Infinity;
               return (
-                <div key={it.name} className="bg-white text-center py-4 px-2">
-                  <div className="text-[12px] text-neutral-400 mb-1.5">
+                <div key={it.name} className="bg-white text-center py-3 px-2">
+                  <div className="text-[12px] text-neutral-400 mb-1">
                     {getEmoji(it.name)} {it.name}
                   </div>
-                  <div className="font-mono text-[16px] font-semibold text-neutral-900 tabular-nums">
+                  <div className="font-mono text-[16px] font-semibold text-neutral-900 tabular-nums mb-1">
                     {count}개
+                  </div>
+                  <div className="text-[10px] text-neutral-400">
+                    {formatDuration(remainingSec)} 후 +1
                   </div>
                 </div>
               );
@@ -667,13 +672,18 @@ export default function SalaryMeter() {
           <div className="grid grid-cols-3 gap-px bg-neutral-200 rounded-xl overflow-hidden border border-neutral-200 mt-2">
             {REFERENCE_ITEMS.slice(3, 6).map((it) => {
               const count = Math.floor(earned / it.price);
+              const remainingWon = it.price * (count + 1) - earned;
+              const remainingSec = perSecond > 0 ? remainingWon / perSecond : Infinity;
               return (
-                <div key={it.name} className="bg-white text-center py-4 px-2">
-                  <div className="text-[12px] text-neutral-400 mb-1.5">
+                <div key={it.name} className="bg-white text-center py-3 px-2">
+                  <div className="text-[12px] text-neutral-400 mb-1">
                     {getEmoji(it.name)} {it.name}
                   </div>
-                  <div className="font-mono text-[16px] font-semibold text-neutral-900 tabular-nums">
+                  <div className="font-mono text-[16px] font-semibold text-neutral-900 tabular-nums mb-1">
                     {count}개
+                  </div>
+                  <div className="text-[10px] text-neutral-400">
+                    {formatDuration(remainingSec)} 후 +1
                   </div>
                 </div>
               );
