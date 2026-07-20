@@ -176,27 +176,28 @@ const SUGGESTED_GROUPS: { category: string; items: { name: string; price: number
     category: "식음료",
     items: [
       { name: "아메리카노", price: 4500 },
-      { name: "빅맥", price: 7900 },
-      { name: "치킨", price: 20000 },
-      { name: "짜장면", price: 7000 },
-      { name: "삼각김밥", price: 1700 },
-      { name: "라면", price: 4000 },
+      { name: "빅맥 세트", price: 7900 },
+      { name: "치킨 한 마리", price: 20000 },
+      { name: "짜장면 한 그릇", price: 7000 },
+      { name: "편의점 삼각김밥", price: 1700 },
+      { name: "라면 한 그릇", price: 4000 },
     ],
   },
   {
     category: "구독료",
     items: [
-      { name: "넷플릭스", price: 13500 },
+      { name: "넷플릭스 한 달 구독료", price: 13500 },
       { name: "유튜브 프리미엄", price: 14900 },
-      { name: "iCloud", price: 1100 },
+      { name: "멜론 스트리밍", price: 10900 },
+      { name: "아이클라우드 50GB", price: 1100 },
     ],
   },
   {
-    category: "교통",
+    category: "교통요금",
     items: [
-      { name: "지하철", price: 1550 },
-      { name: "버스", price: 1500 },
-      { name: "택시", price: 4800 },
+      { name: "지하철 기본요금", price: 1550 },
+      { name: "버스 기본요금", price: 1500 },
+      { name: "택시 기본요금", price: 4800 },
     ],
   },
   {
@@ -206,6 +207,15 @@ const SUGGESTED_GROUPS: { category: string; items: { name: string; price: number
       { name: "로또 1장", price: 1000 },
     ],
   },
+];
+
+const REFERENCE_ITEMS: { name: string; price: number }[] = [
+  { name: "아메리카노", price: 4500 },
+  { name: "지하철", price: 1550 },
+  { name: "짜장면", price: 7000 },
+  { name: "치킨", price: 20000 },
+  { name: "영화표", price: 15000 },
+  { name: "넷플릭스", price: 13500 },
 ];
 
 const CONFETTI_EMOJIS = ["🎉", "✨", "🎊", "⭐️", "💛", "💫"];
@@ -640,34 +650,34 @@ export default function SalaryMeter() {
 
         <div className="w-full mb-6">
           <div className="grid grid-cols-3 gap-px bg-neutral-200 rounded-xl overflow-hidden border border-neutral-200">
-            {RATE_INTERVALS.map((r) => (
-              <div key={r.label} className="bg-white text-center py-4 px-2">
-                <div className="text-[13px] text-neutral-400 mb-1.5">{r.label}당</div>
-                <div className="font-mono text-[16px] font-semibold text-neutral-900 tabular-nums">
-                  {fmtWon(perSecond * r.seconds)}원
+            {REFERENCE_ITEMS.slice(0, 3).map((it) => {
+              const count = Math.floor(earned / it.price);
+              return (
+                <div key={it.name} className="bg-white text-center py-4 px-2">
+                  <div className="text-[12px] text-neutral-400 mb-1.5">
+                    {getEmoji(it.name)} {it.name}
+                  </div>
+                  <div className="font-mono text-[16px] font-semibold text-neutral-900 tabular-nums">
+                    {count}개
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div className="grid grid-cols-3 gap-px bg-neutral-200 rounded-xl overflow-hidden border border-neutral-200 mt-2">
-            <div className="bg-white text-center py-4 px-2">
-              <div className="text-[13px] text-neutral-400 mb-1.5">1시간당</div>
-              <div className="font-mono text-[16px] font-semibold text-neutral-900 tabular-nums">
-                {fmtWon(perSecond * 3600)}원
-              </div>
-            </div>
-            <div className="bg-white text-center py-4 px-2">
-              <div className="text-[13px] text-neutral-400 mb-1.5">하루당</div>
-              <div className="font-mono text-[16px] font-semibold text-neutral-900 tabular-nums">
-                {fmtWon(perSecond * hoursNum * 3600)}원
-              </div>
-            </div>
-            <div className="bg-white text-center py-4 px-2">
-              <div className="text-[13px] text-neutral-400 mb-1.5">한 달당</div>
-              <div className="font-mono text-[16px] font-semibold text-neutral-900 tabular-nums">
-                {fmtWon(salary / 12)}원
-              </div>
-            </div>
+            {REFERENCE_ITEMS.slice(3, 6).map((it) => {
+              const count = Math.floor(earned / it.price);
+              return (
+                <div key={it.name} className="bg-white text-center py-4 px-2">
+                  <div className="text-[12px] text-neutral-400 mb-1.5">
+                    {getEmoji(it.name)} {it.name}
+                  </div>
+                  <div className="font-mono text-[16px] font-semibold text-neutral-900 tabular-nums">
+                    {count}개
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
