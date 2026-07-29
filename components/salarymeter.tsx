@@ -456,8 +456,12 @@ export default function SalaryMeter() {
     }
   };
 
-  const handleToggleRunning = () => {
-    setRunning((r) => !r);
+  const handleStart = () => {
+    setRunning(true);
+  };
+
+  const handleStop = () => {
+    setRunning(false);
   };
 
   const handleConfirm = () => {
@@ -533,16 +537,22 @@ export default function SalaryMeter() {
           {running && workStatus === "weekend" && "주말 · 카운트가 멈춰있어요"}
         </div>
 
-        <button
-          onClick={handleToggleRunning}
-          className={`mb-8 text-[14px] font-medium px-6 py-2.5 rounded-full ${
-            running
-              ? "bg-neutral-100 text-neutral-700 border border-neutral-300"
-              : "bg-neutral-900 text-white"
-          }`}
-        >
-          {running ? "⏸ 정지" : "▶ 시작"}
-        </button>
+        <div className="flex gap-3 mb-8">
+          <button
+            onClick={handleStart}
+            disabled={running}
+            className="text-[14px] font-medium px-6 py-2.5 rounded-full bg-neutral-900 text-white disabled:bg-neutral-200 disabled:text-neutral-400"
+          >
+            ▶ 시작
+          </button>
+          <button
+            onClick={handleStop}
+            disabled={!running}
+            className="text-[14px] font-medium px-6 py-2.5 rounded-full bg-neutral-100 text-neutral-700 border border-neutral-300 disabled:bg-white disabled:text-neutral-300 disabled:border-neutral-200"
+          >
+            ⏸ 정지
+          </button>
+        </div>
 
         {wishlist.length > 0 && !editingWishlist && (
           <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-4">
