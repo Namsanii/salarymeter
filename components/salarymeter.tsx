@@ -70,6 +70,14 @@ function formatDuration(seconds: number): string {
   return remH > 0 ? `${days}일 ${remH}시간` : `${days}일`;
 }
 
+function formatCycleDuration(seconds: number): string {
+  const s = Math.max(0, Math.round(seconds));
+  const m = Math.floor(s / 60);
+  const remS = s % 60;
+  if (m === 0) return `${remS}초`;
+  return `${m}분 ${remS}초`;
+}
+
 function diffHours(start: string, end: string): number {
   const [sh, sm] = start.split(":").map(Number);
   const [eh, em] = end.split(":").map(Number);
@@ -268,8 +276,11 @@ export default function SalaryMeter() {
 
   const [earnedSec, setEarnedSec] = useState(0);
   const [running, setRunning] = useState(false);
-  const [history, setHistory] = useState<Record<string, { totalWon: number; sessions: number }>>({});
+  const [sessionLog, setSessionLog] = useState
+    { id: string; date: string; durationSec: number; amountWon: number }[]
+  >([]);
   const prevRunningRef = useRef(false);
+  const sessionStartRef = useRef<{ timestamp: number; earnedSecAtStart: number } | null>(null);
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [newItemName, setNewItemName] = useState("");
   const [newItemPriceDigits, setNewItemPriceDigits] = useState("");
@@ -292,8 +303,8 @@ export default function SalaryMeter() {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem("salarymeter_history");
-      if (raw) setHistory(JSON.parse(raw));
+      const raw = localStorage.getItem("salarymeter_sessions");
+      if (raw) setSessionLog(JSON.parse(raw));
     } catch {
       // ignore
     }
@@ -301,22 +312,33 @@ export default function SalaryMeter() {
 
   useEffect(() => {
     try {
-      localStorage.setItem("salarymeter_history", JSON.stringify(history));
+      localStorage.setItem("salarymeter_sessions", JSON.stringify(sessionLog));
     } catch {
       // ignore
     }
-  }, [history]);
+  }, [sessionLog]);
 
   useEffect(() => {
     if (running && !prevRunningRef.current) {
-      const key = toISODate(new Date());
-      setHistory((prev) => {
-        const entry = prev[key] || { totalWon: 0, sessions: 0 };
-        return { ...prev, [key]: { ...entry, sessions: entry.sessions + 1 } };
-      });
+      sessionStartRef.current = { timestamp: Date.now(), earnedSecAtStart: earnedSec };
+    } else if (!running && prevRunningRef.current && sessionStartRef.current) {
+      const durationSec = (Date.now() - sessionStartRef.current.timestamp) / 1000;
+      const amountWon = (earnedSec - sessionStartRef.current.earnedSecAtStart) * perSecond;
+      setSessionLog((log) =>
+        [
+          {
+            id: crypto.randomUUID(),
+            date: toISODate(new Date()),
+            durationSec,
+            amountWon,
+          },
+          ...log,
+        ].slice(0, 50)
+      );
+      sessionStartRef.current = null;
     }
     prevRunningRef.current = running;
-  }, [running]);
+  }, [running, earnedSec, perSecond]);
 
   useEffect(() => {
     if (view !== "result") return;
@@ -325,15 +347,10 @@ export default function SalaryMeter() {
       setNow(current.getTime());
       if (running && isWithinWorkWindow(current, workStart, workEnd, weekdaysOnly)) {
         setEarnedSec((s) => s + 1);
-        const key = toISODate(current);
-        setHistory((prev) => {
-          const entry = prev[key] || { totalWon: 0, sessions: 0 };
-          return { ...prev, [key]: { ...entry, totalWon: entry.totalWon + perSecond } };
-        });
       }
     }, 1000);
     return () => clearInterval(id);
-  }, [view, running, workStart, workEnd, weekdaysOnly, perSecond]);
+  }, [view, running, workStart, workEnd, weekdaysOnly]);
 
   const workStatus = useMemo(
     () => getWorkStatus(new Date(now), workStart, workEnd, weekdaysOnly),
@@ -744,27 +761,24 @@ export default function SalaryMeter() {
           </div>
         </div>
 
-        {Object.keys(history).length > 0 && (
+        {sessionLog.length > 0 && (
           <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-6">
             <div className="px-4 py-2.5 text-[12px] font-semibold text-neutral-500 bg-neutral-50 border-b border-neutral-200">
-              날짜별 기록
+              시작~정지 기록
             </div>
-            {Object.entries(history)
-              .sort((a, b) => b[0].localeCompare(a[0]))
-              .slice(0, 7)
-              .map(([date, entry], i, arr) => (
-                <div
-                  key={date}
-                  className={`flex items-center justify-between px-4 py-2.5 text-[13px] ${
-                    i !== arr.length - 1 ? "border-b border-neutral-200" : ""
-                  }`}
-                >
-                  <span className="text-neutral-600">
-                    {formatDateLabel(date)} · {entry.sessions}번
-                  </span>
-                  <span className="font-mono text-neutral-900">{fmtWon(entry.totalWon)}원</span>
-                </div>
-              ))}
+            {sessionLog.slice(0, 10).map((s, i, arr) => (
+              <div
+                key={s.id}
+                className={`flex items-center justify-between px-4 py-2.5 text-[13px] ${
+                  i !== arr.length - 1 ? "border-b border-neutral-200" : ""
+                }`}
+              >
+                <span className="text-neutral-600">
+                  {formatDateLabel(s.date)} · {formatCycleDuration(s.durationSec)}
+                </span>
+                <span className="font-mono text-neutral-900">{fmtWon(s.amountWon)}원</span>
+              </div>
+            ))}
           </div>
         )}
 
