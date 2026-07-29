@@ -27,6 +27,11 @@ function toISODate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+function formatDateLabel(iso: string): string {
+  const [, m, d] = iso.split("-").map(Number);
+  return `${m}월 ${d}일`;
+}
+
 function getDefaultWorkdays(year: number): number {
   const holidaySet = new Set(year === 2026 ? HOLIDAYS_2026 : []);
   let count = 0;
@@ -113,12 +118,6 @@ function getWorkStatus(
   if (now >= endD) return "after";
   return "working";
 }
-
-const RATE_INTERVALS: { label: string; seconds: number }[] = [
-  { label: "1분", seconds: 60 },
-  { label: "10분", seconds: 600 },
-  { label: "30분", seconds: 1800 },
-];
 
 const EMOJI_MAP: [string, string][] = [
   ["커피", "☕"],
@@ -269,6 +268,8 @@ export default function SalaryMeter() {
 
   const [earnedSec, setEarnedSec] = useState(0);
   const [running, setRunning] = useState(false);
+  const [history, setHistory] = useState<Record<string, { totalWon: number; sessions: number }>>({});
+  const prevRunningRef = useRef(false);
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [newItemName, setNewItemName] = useState("");
   const [newItemPriceDigits, setNewItemPriceDigits] = useState("");
@@ -280,18 +281,6 @@ export default function SalaryMeter() {
   const [confetti, setConfetti] = useState<ConfettiParticle[]>([]);
   const celebratedCountRef = useRef<Map<string, number>>(new Map());
 
-  useEffect(() => {
-    if (view !== "result") return;
-    const id = setInterval(() => {
-      const current = new Date();
-      setNow(current.getTime());
-      if (running && isWithinWorkWindow(current, workStart, workEnd, weekdaysOnly)) {
-        setEarnedSec((s) => s + 1);
-      }
-    }, 1000);
-    return () => clearInterval(id);
-  }, [view, running, workStart, workEnd, weekdaysOnly]);
-
   const salaryManwon = Number(salaryManwonDigits || "0");
   const salary = salaryManwon * 10000;
   const workdaysNum = Math.max(1, Number(workdays || "0"));
@@ -300,6 +289,51 @@ export default function SalaryMeter() {
   const perSecond = salary / (workdaysNum * hoursNum * 3600);
 
   const earned = earnedSec * perSecond;
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("salarymeter_history");
+      if (raw) setHistory(JSON.parse(raw));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("salarymeter_history", JSON.stringify(history));
+    } catch {
+      // ignore
+    }
+  }, [history]);
+
+  useEffect(() => {
+    if (running && !prevRunningRef.current) {
+      const key = toISODate(new Date());
+      setHistory((prev) => {
+        const entry = prev[key] || { totalWon: 0, sessions: 0 };
+        return { ...prev, [key]: { ...entry, sessions: entry.sessions + 1 } };
+      });
+    }
+    prevRunningRef.current = running;
+  }, [running]);
+
+  useEffect(() => {
+    if (view !== "result") return;
+    const id = setInterval(() => {
+      const current = new Date();
+      setNow(current.getTime());
+      if (running && isWithinWorkWindow(current, workStart, workEnd, weekdaysOnly)) {
+        setEarnedSec((s) => s + 1);
+        const key = toISODate(current);
+        setHistory((prev) => {
+          const entry = prev[key] || { totalWon: 0, sessions: 0 };
+          return { ...prev, [key]: { ...entry, totalWon: entry.totalWon + perSecond } };
+        });
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [view, running, workStart, workEnd, weekdaysOnly, perSecond]);
 
   const workStatus = useMemo(
     () => getWorkStatus(new Date(now), workStart, workEnd, weekdaysOnly),
@@ -709,6 +743,30 @@ export default function SalaryMeter() {
             })}
           </div>
         </div>
+
+        {Object.keys(history).length > 0 && (
+          <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-6">
+            <div className="px-4 py-2.5 text-[12px] font-semibold text-neutral-500 bg-neutral-50 border-b border-neutral-200">
+              날짜별 기록
+            </div>
+            {Object.entries(history)
+              .sort((a, b) => b[0].localeCompare(a[0]))
+              .slice(0, 7)
+              .map(([date, entry], i, arr) => (
+                <div
+                  key={date}
+                  className={`flex items-center justify-between px-4 py-2.5 text-[13px] ${
+                    i !== arr.length - 1 ? "border-b border-neutral-200" : ""
+                  }`}
+                >
+                  <span className="text-neutral-600">
+                    {formatDateLabel(date)} · {entry.sessions}번
+                  </span>
+                  <span className="font-mono text-neutral-900">{fmtWon(entry.totalWon)}원</span>
+                </div>
+              ))}
+          </div>
+        )}
 
         <button
           onClick={handleBack}
