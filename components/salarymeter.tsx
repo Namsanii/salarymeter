@@ -276,9 +276,7 @@ export default function SalaryMeter() {
 
   const [earnedSec, setEarnedSec] = useState(0);
   const [running, setRunning] = useState(false);
-  const [sessionLog, setSessionLog] = useState
-    { id: string; date: string; durationSec: number; amountWon: number }[]
-  >([]);
+  const [sessionLog, setSessionLog] = useState<{ id: string; date: string; durationSec: number; amountWon: number }[]>([]);
   const prevRunningRef = useRef(false);
   const sessionStartRef = useRef<{ timestamp: number; earnedSecAtStart: number } | null>(null);
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
