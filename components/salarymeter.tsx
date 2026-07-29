@@ -268,7 +268,6 @@ export default function SalaryMeter() {
   const [now, setNow] = useState(() => Date.now());
 
   const [earnedSec, setEarnedSec] = useState(0);
-  const [earnedSec, setEarnedSec] = useState(0);
   const [running, setRunning] = useState(false);
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [newItemName, setNewItemName] = useState("");
