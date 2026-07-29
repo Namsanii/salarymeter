@@ -268,6 +268,8 @@ export default function SalaryMeter() {
   const [now, setNow] = useState(() => Date.now());
 
   const [earnedSec, setEarnedSec] = useState(0);
+  const [earnedSec, setEarnedSec] = useState(0);
+  const [running, setRunning] = useState(false);
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [newItemName, setNewItemName] = useState("");
   const [newItemPriceDigits, setNewItemPriceDigits] = useState("");
@@ -284,12 +286,12 @@ export default function SalaryMeter() {
     const id = setInterval(() => {
       const current = new Date();
       setNow(current.getTime());
-      if (isWithinWorkWindow(current, workStart, workEnd, weekdaysOnly)) {
+      if (running && isWithinWorkWindow(current, workStart, workEnd, weekdaysOnly)) {
         setEarnedSec((s) => s + 1);
       }
     }, 1000);
     return () => clearInterval(id);
-  }, [view, workStart, workEnd, weekdaysOnly]);
+  }, [view, running, workStart, workEnd, weekdaysOnly]);
 
   const salaryManwon = Number(salaryManwonDigits || "0");
   const salary = salaryManwon * 10000;
@@ -406,6 +408,10 @@ export default function SalaryMeter() {
     }
   };
 
+  const handleToggleRunning = () => {
+    setRunning((r) => !r);
+  };
+
   const handleConfirm = () => {
     if (!salaryManwonDigits || salary <= 0) return;
     celebratedCountRef.current = new Map();
@@ -413,6 +419,7 @@ export default function SalaryMeter() {
     setConfetti([]);
     setEditingWishlist(false);
     setEarnedSec(0);
+    setRunning(false);
     setStartTime(Date.now());
     setNow(Date.now());
     setView("result");
@@ -422,6 +429,7 @@ export default function SalaryMeter() {
     setView("form");
     setStartTime(null);
     setEarnedSec(0);
+    setRunning(false);
     celebratedCountRef.current = new Map();
     setCelebration(null);
     setConfetti([]);
@@ -469,12 +477,24 @@ export default function SalaryMeter() {
           {fmtWon(earned)}원
         </div>
         <div className="text-[15px] text-neutral-500 mb-1">벌었습니다</div>
-        <div className="text-[12.5px] text-neutral-400 mb-8">
-          {workStatus === "working" && "근무 중 · 실시간으로 올라가고 있어요"}
-          {workStatus === "before" && `${workStart}부터 카운트가 시작돼요`}
-          {workStatus === "after" && "오늘 근무 종료 · 내일 다시 올라가요"}
-          {workStatus === "weekend" && "주말 · 카운트가 멈춰있어요"}
+        <div className="text-[12.5px] text-neutral-400 mb-4">
+          {!running && "정지됨 · 시작 버튼을 눌러주세요"}
+          {running && workStatus === "working" && "근무 중 · 실시간으로 올라가고 있어요"}
+          {running && workStatus === "before" && `${workStart}부터 카운트가 시작돼요`}
+          {running && workStatus === "after" && "오늘 근무 종료 · 내일 다시 올라가요"}
+          {running && workStatus === "weekend" && "주말 · 카운트가 멈춰있어요"}
         </div>
+
+        <button
+          onClick={handleToggleRunning}
+          className={`mb-8 text-[14px] font-medium px-6 py-2.5 rounded-full ${
+            running
+              ? "bg-neutral-100 text-neutral-700 border border-neutral-300"
+              : "bg-neutral-900 text-white"
+          }`}
+        >
+          {running ? "⏸ 정지" : "▶ 시작"}
+        </button>
 
         {wishlist.length > 0 && !editingWishlist && (
           <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-4">
