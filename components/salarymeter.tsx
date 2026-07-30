@@ -340,7 +340,20 @@ export default function SalaryMeter() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem("salarymeter_sessions");
-      if (raw) setSessionLog(JSON.parse(raw));
+      if (raw) {
+        const parsed = JSON.parse(raw) as {
+          id: string;
+          date: string;
+          startTimestamp?: number;
+          durationSec: number;
+          amountWon: number;
+        }[];
+        const sanitized = parsed.map((entry) => ({
+          ...entry,
+          startTimestamp: entry.startTimestamp ?? new Date(entry.date).getTime(),
+        }));
+        setSessionLog(sanitized);
+      }
     } catch {
       // ignore
     }
@@ -358,6 +371,7 @@ export default function SalaryMeter() {
     if (running && !prevRunningRef.current) {
       sessionStartRef.current = { timestamp: Date.now(), earnedSecAtStart: earnedSec };
     } else if (!running && prevRunningRef.current && sessionStartRef.current) {
+      const startTimestamp = sessionStartRef.current.timestamp;
       const durationSec = (Date.now() - sessionStartRef.current.timestamp) / 1000;
       const amountWon = (earnedSec - sessionStartRef.current.earnedSecAtStart) * perSecond;
       setSessionLog((log) =>
@@ -365,7 +379,7 @@ export default function SalaryMeter() {
           {
             id: crypto.randomUUID(),
             date: toISODate(new Date()),
-            startTimestamp: sessionStartRef.current!.timestamp,
+            startTimestamp,
             durationSec,
             amountWon,
           },
