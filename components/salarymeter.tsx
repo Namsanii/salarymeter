@@ -27,22 +27,6 @@ function toISODate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function formatDateLabel(iso: string): string {
-  const [, m, d] = iso.split("-").map(Number);
-  return `${m}월 ${d}일`;
-}
-
-const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
-
-function formatSessionTimeLabel(timestamp: number): string {
-  const d = new Date(timestamp);
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
-  const weekday = WEEKDAY_LABELS[d.getDay()];
-  const hour = d.getHours();
-  return `${m}/${day}(${weekday}) ${hour}시`;
-}
-
 function getDefaultWorkdays(year: number): number {
   const holidaySet = new Set(year === 2026 ? HOLIDAYS_2026 : []);
   let count = 0;
@@ -287,7 +271,8 @@ export default function SalaryMeter() {
 
   const [earnedSec, setEarnedSec] = useState(0);
   const [running, setRunning] = useState(false);
-  const [sessionLog, setSessionLog] = useState<{ id: string; date: string; startTimestamp: number; durationSec: number; amountWon: number }[]>([]);
+  const [sessionLog, setSessionLog] = useState<{ id: string; date: string; startTimestamp: number; durationSec: number; amountWon: number; ordinal: number }[]>([]);
+  const [sessionCount, setSessionCount] = useState(0);
   const prevRunningRef = useRef(false);
   const sessionStartRef = useRef<{ timestamp: number; earnedSecAtStart: number } | null>(null);
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
@@ -347,12 +332,24 @@ export default function SalaryMeter() {
           startTimestamp?: number;
           durationSec: number;
           amountWon: number;
+          ordinal?: number;
         }[];
-        const sanitized = parsed.map((entry) => ({
-          ...entry,
-          startTimestamp: entry.startTimestamp ?? new Date(entry.date).getTime(),
-        }));
+        // oldest-first pass to assign fallback ordinals for legacy entries
+        const oldestFirst = [...parsed].reverse();
+        let nextOrdinal = 1;
+        const withOrdinal = oldestFirst.map((entry) => {
+          const ordinal = entry.ordinal ?? nextOrdinal;
+          nextOrdinal = ordinal + 1;
+          return {
+            ...entry,
+            startTimestamp: entry.startTimestamp ?? new Date(entry.date).getTime(),
+            ordinal,
+          };
+        });
+        const sanitized = withOrdinal.reverse();
         setSessionLog(sanitized);
+        const maxOrdinal = sanitized.reduce((max, e) => Math.max(max, e.ordinal), 0);
+        setSessionCount(maxOrdinal);
       }
     } catch {
       // ignore
@@ -374,6 +371,7 @@ export default function SalaryMeter() {
       const startTimestamp = sessionStartRef.current.timestamp;
       const durationSec = (Date.now() - sessionStartRef.current.timestamp) / 1000;
       const amountWon = (earnedSec - sessionStartRef.current.earnedSecAtStart) * perSecond;
+      const ordinal = sessionCount + 1;
       setSessionLog((log) =>
         [
           {
@@ -382,14 +380,16 @@ export default function SalaryMeter() {
             startTimestamp,
             durationSec,
             amountWon,
+            ordinal,
           },
           ...log,
         ].slice(0, 50)
       );
+      setSessionCount(ordinal);
       sessionStartRef.current = null;
     }
     prevRunningRef.current = running;
-  }, [running, earnedSec, perSecond]);
+  }, [running, earnedSec, perSecond, sessionCount]);
 
   useEffect(() => {
     if (view !== "result") return;
@@ -835,7 +835,7 @@ export default function SalaryMeter() {
                 }`}
               >
                 <span className="text-neutral-600">
-                  {formatSessionTimeLabel(s.startTimestamp)} · {formatCycleDuration(s.durationSec)}
+                  {s.ordinal}번째 존버 · {formatCycleDuration(s.durationSec)}
                 </span>
                 <span className="font-mono text-neutral-900">{fmtWon(s.amountWon)}원</span>
               </div>
