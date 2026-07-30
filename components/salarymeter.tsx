@@ -32,6 +32,17 @@ function formatDateLabel(iso: string): string {
   return `${m}월 ${d}일`;
 }
 
+const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
+
+function formatSessionTimeLabel(timestamp: number): string {
+  const d = new Date(timestamp);
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  const weekday = WEEKDAY_LABELS[d.getDay()];
+  const hour = d.getHours();
+  return `${m}/${day}(${weekday}) ${hour}시`;
+}
+
 function getDefaultWorkdays(year: number): number {
   const holidaySet = new Set(year === 2026 ? HOLIDAYS_2026 : []);
   let count = 0;
@@ -276,7 +287,7 @@ export default function SalaryMeter() {
 
   const [earnedSec, setEarnedSec] = useState(0);
   const [running, setRunning] = useState(false);
-  const [sessionLog, setSessionLog] = useState<{ id: string; date: string; durationSec: number; amountWon: number }[]>([]);
+  const [sessionLog, setSessionLog] = useState<{ id: string; date: string; startTimestamp: number; durationSec: number; amountWon: number }[]>([]);
   const prevRunningRef = useRef(false);
   const sessionStartRef = useRef<{ timestamp: number; earnedSecAtStart: number } | null>(null);
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
@@ -298,6 +309,33 @@ export default function SalaryMeter() {
   const perSecond = salary / (workdaysNum * hoursNum * 3600);
 
   const earned = earnedSec * perSecond;
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("salarymeter_settings");
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved.salaryManwonDigits) setSalaryManwonDigits(saved.salaryManwonDigits);
+        if (saved.workdays) setWorkdays(saved.workdays);
+        if (saved.workStart) setWorkStart(saved.workStart);
+        if (saved.workEnd) setWorkEnd(saved.workEnd);
+        if (typeof saved.weekdaysOnly === "boolean") setWeekdaysOnly(saved.weekdaysOnly);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "salarymeter_settings",
+        JSON.stringify({ salaryManwonDigits, workdays, workStart, workEnd, weekdaysOnly })
+      );
+    } catch {
+      // ignore
+    }
+  }, [salaryManwonDigits, workdays, workStart, workEnd, weekdaysOnly]);
 
   useEffect(() => {
     try {
@@ -327,6 +365,7 @@ export default function SalaryMeter() {
           {
             id: crypto.randomUUID(),
             date: toISODate(new Date()),
+            startTimestamp: sessionStartRef.current!.timestamp,
             durationSec,
             amountWon,
           },
@@ -772,7 +811,7 @@ export default function SalaryMeter() {
         {sessionLog.length > 0 && (
           <div className="w-full border border-neutral-200 rounded-xl overflow-hidden mb-6">
             <div className="px-4 py-2.5 text-[12px] font-semibold text-neutral-500 bg-neutral-50 border-b border-neutral-200">
-              시작~정지 기록
+              존버 기록
             </div>
             {sessionLog.slice(0, 10).map((s, i, arr) => (
               <div
@@ -782,7 +821,7 @@ export default function SalaryMeter() {
                 }`}
               >
                 <span className="text-neutral-600">
-                  {formatDateLabel(s.date)} · {formatCycleDuration(s.durationSec)}
+                  {formatSessionTimeLabel(s.startTimestamp)} · {formatCycleDuration(s.durationSec)}
                 </span>
                 <span className="font-mono text-neutral-900">{fmtWon(s.amountWon)}원</span>
               </div>
